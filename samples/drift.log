@@ -1,0 +1,1 @@
+devname="FGT-EDGE-01" devid="FGT-LAB-001" logid="0000000013" timestamp="2026-09-18T02:56:13.758886+00:00" type="traffic" client_ip=198.51.100.24 srcport=42318 server_ip=10.20.0.12 dstport=22 proto=6 action=deny level=warning msg="Synthetic firmware schema change"

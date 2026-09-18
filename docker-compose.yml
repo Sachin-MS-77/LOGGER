@@ -1,0 +1,24 @@
+services:
+  aegis:
+    build: .
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - "127.0.0.1:8765:8765"
+      - "5514:5514/tcp"
+      - "5514:5514/udp"
+      - "6514:6514/tcp"
+    volumes:
+      - aegis-data:/var/lib/aegis
+    environment:
+      AEGIS_DATA_DIR: /var/lib/aegis
+      AEGIS_HOST: 0.0.0.0
+      AEGIS_SYSLOG_HOST: 0.0.0.0
+    restart: unless-stopped
+volumes:
+  aegis-data:
