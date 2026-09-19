@@ -6,7 +6,7 @@
 
 LOGFLUX is a working, single-node perimeter-log prototype. It receives real network messages, preserves the original bytes, normalizes supported formats, and sends unfamiliar structures through a reviewed parser workflow. The dashboard, API, evidence verification, parser signatures, local AI adapter and exports use real backend operations.
 
-![Command center](docs/screenshots/command-center.png)
+![LOGFLUX Command Center — live dashboard](docs/screenshots/command-center.png)
 
 ## Start
 
