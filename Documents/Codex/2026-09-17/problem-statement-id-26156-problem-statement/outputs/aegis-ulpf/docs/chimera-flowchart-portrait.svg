@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="808" height="1430" viewBox="0 0 808 1430">
+<defs><marker id="a" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto"><path d="M0 0L11 5.5L0 11z" fill="#73e7ff"/></marker><filter id="s"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity=".3"/></filter></defs>
+<rect width="808" height="1430" fill="#ffffff"/>
+<rect x="20" y="20" width="768" height="1390" rx="28" fill="none" stroke="#1b6b87" stroke-width="2"/>
+<text x="404" y="76" text-anchor="middle" font-family="Arial,sans-serif" font-size="38" font-weight="800" letter-spacing="1.1" fill="#102535">CHIMERA PIPELINE</text>
+<text x="404" y="113" text-anchor="middle" font-family="Arial,sans-serif" font-size="19" font-weight="700" fill="#73e7ff">RELIABILITY FLOWCHART</text>
+<text x="404" y="145" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" fill="#426170">From telemetry to investigator-ready output</text>
+<g font-family="Arial,sans-serif" text-anchor="middle" filter="url(#s)">
+ <rect x="164" y="182" width="480" height="86" rx="18" fill="#526072" stroke="#95a4b8" stroke-width="2"/><text x="404" y="235" font-size="25" font-weight="800" fill="#fff">CHIMERA PIPELINE</text>
+ <path d="M404 268v35M404 303H220v30M404 303h184v30" fill="none" stroke="#73e7ff" stroke-width="4" marker-end="url(#a)"/>
+ <rect x="55" y="342" width="330" height="125" rx="18" fill="#087e9b" stroke="#73e7ff" stroke-width="2"/><text x="220" y="383" font-size="26" font-weight="800" fill="#fff">COMPONENTS</text><text x="220" y="419" font-size="20" fill="#e8fbff">Ingestion · Graph</text><text x="220" y="447" font-size="20" fill="#e8fbff">Detection · Scoring</text>
+ <rect x="423" y="342" width="330" height="125" rx="18" fill="#087e9b" stroke="#73e7ff" stroke-width="2"/><text x="588" y="383" font-size="26" font-weight="800" fill="#fff">SUBSYSTEMS</text><text x="588" y="419" font-size="19" fill="#e8fbff">Explainability · Dashboard</text><text x="588" y="447" font-size="20" fill="#e8fbff">Evidence Log</text>
+ <path d="M220 467v44h368v-44M404 511v35" fill="none" stroke="#73e7ff" stroke-width="4" marker-end="url(#a)"/>
+ <rect x="101" y="557" width="606" height="112" rx="18" fill="#174c70" stroke="#4dc9ed" stroke-width="2"/><text x="404" y="603" font-size="25" font-weight="800" fill="#fff">LOGICAL RELATIONSHIPS</text><text x="404" y="637" font-size="20" fill="#d9f6ff">Data flow · dependencies · lineage</text><text x="404" y="662" font-size="20" fill="#d9f6ff">and feedback loops</text>
+ <path d="M404 669v38" stroke="#73e7ff" stroke-width="4" marker-end="url(#a)"/>
+ <rect x="101" y="716" width="606" height="112" rx="18" fill="#286d85" stroke="#73e7ff" stroke-width="2"/><text x="404" y="762" font-size="24" font-weight="800" fill="#fff">IMPACT ON DETECTION ACCURACY</text><text x="404" y="797" font-size="20" fill="#e5fbff">Signal quality · context · confidence</text><text x="404" y="822" font-size="20" fill="#e5fbff">and false-positive control</text>
+ <path d="M404 828v38" stroke="#73e7ff" stroke-width="4" marker-end="url(#a)"/>
+ <rect x="101" y="875" width="606" height="124" rx="18" fill="#a96818" stroke="#ffc96a" stroke-width="2"/><text x="404" y="920" font-size="25" font-weight="800" fill="#fff">VALIDATED VIA</text><text x="404" y="950" font-size="25" font-weight="800" fill="#fff">ADVERSARIAL TESTING</text><text x="404" y="982" font-size="18" fill="#fff4dc">Drift · malformed logs · evasion</text>
+ <path d="M404 999v38" stroke="#73e7ff" stroke-width="4" marker-end="url(#a)"/>
+ <rect x="74" y="1046" width="660" height="142" rx="18" fill="#14856d" stroke="#6ff0c2" stroke-width="2"/><text x="404" y="1090" font-size="25" font-weight="800" fill="#fff">CALIBRATED,</text><text x="404" y="1123" font-size="25" font-weight="800" fill="#fff">INVESTIGATOR-READY OUTPUT</text><text x="404" y="1158" font-size="19" fill="#eafff7">Evidence-backed decisions</text><text x="404" y="1183" font-size="19" fill="#eafff7">with explainability and audit trail</text>
+</g>
+<g font-family="Arial,sans-serif"><text x="54" y="1260" font-size="14" font-weight="700" fill="#087e9b">CHIMERA / TRUSTED TELEMETRY</text><line x1="54" y1="1278" x2="754" y2="1278" stroke="#9cc8d4"/><text x="404" y="1321" text-anchor="middle" font-size="16" fill="#426170">Every relationship remains traceable</text><text x="404" y="1349" text-anchor="middle" font-size="16" fill="#426170">from ingestion to the final investigator view.</text></g>
+</svg>

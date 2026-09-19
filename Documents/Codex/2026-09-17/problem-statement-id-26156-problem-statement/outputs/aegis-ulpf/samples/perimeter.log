@@ -1,0 +1,10 @@
+devname="FGT-EDGE-01" devid="FGT-LAB-001" logid="0000000013" timestamp="2026-09-18T02:56:13.756559+00:00" type="traffic" srcip=198.51.100.24 srcport=42000 dstip=10.20.0.12 dstport=443 proto=6 action=deny level=warning msg="Synthetic perimeter scenario"
+{"timestamp": "2026-09-18T02:56:13.831559+00:00", "flow_id": 900001, "event_type": "flow", "src_ip": "10.10.1.11", "src_port": 42001, "dest_ip": "192.0.2.11", "dest_port": 53, "proto": "TCP", "alert": {"action": "allowed", "signature": "Synthetic flow observation", "severity": 3}}
+<166>1 2026-09-18T02:56:13.906559+00:00 ASA-LAB asa - - - %ASA-6-106023: Deny tcp src outside:10.10.1.12/42002 dst inside:192.0.2.12/22 by access-group "LAB-IN"
+CEF:0|Lab|Gateway|1.0|100|Synthetic connection|7|src=10.10.1.13 dst=192.0.2.13 spt=42003 dpt=3389 proto=TCP act=deny rt=2026-09-18T02:56:13.981559+00:00
+origin=198.51.100.24 target=10.20.0.12 origin_port=42004 target_port=80 verdict=deny transport=tcp observed_at=2026-09-18T02:56:14.056559+00:00 message="Synthetic router event"
+devname="FGT-EDGE-01" devid="FGT-LAB-001" logid="0000000013" timestamp="2026-09-18T02:56:14.131559+00:00" type="traffic" srcip=10.10.1.15 srcport=42005 dstip=192.0.2.15 dstport=445 proto=6 action=deny level=warning msg="Synthetic perimeter scenario"
+{"timestamp": "2026-09-18T02:56:14.206559+00:00", "flow_id": 900006, "event_type": "flow", "src_ip": "10.10.1.16", "src_port": 42006, "dest_ip": "192.0.2.16", "dest_port": 443, "proto": "TCP", "alert": {"action": "allowed", "signature": "Synthetic flow observation", "severity": 3}}
+<166>1 2026-09-18T02:56:14.281559+00:00 ASA-LAB asa - - - %ASA-6-106023: Deny tcp src outside:10.10.1.17/42007 dst inside:192.0.2.17/53 by access-group "LAB-IN"
+CEF:0|Lab|Gateway|1.0|100|Synthetic connection|7|src=198.51.100.24 dst=10.20.0.12 spt=42008 dpt=22 proto=TCP act=deny rt=2026-09-18T02:56:14.356559+00:00
+origin=10.10.1.19 target=192.0.2.11 origin_port=42009 target_port=3389 verdict=deny transport=tcp observed_at=2026-09-18T02:56:14.431559+00:00 message="Synthetic router event"

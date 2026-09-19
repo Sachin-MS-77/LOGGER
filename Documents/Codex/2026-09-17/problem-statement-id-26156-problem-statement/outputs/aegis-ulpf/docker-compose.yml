@@ -1,0 +1,24 @@
+services:
+  logflux:
+    build: .
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - "127.0.0.1:8765:8765"
+      - "5514:5514/tcp"
+      - "5514:5514/udp"
+      - "6514:6514/tcp"
+    volumes:
+      - logflux-data:/var/lib/logflux
+    environment:
+      LOGFLUX_DATA_DIR: /var/lib/logflux
+      LOGFLUX_HOST: 0.0.0.0
+      LOGFLUX_SYSLOG_HOST: 0.0.0.0
+    restart: unless-stopped
+volumes:
+  logflux-data:

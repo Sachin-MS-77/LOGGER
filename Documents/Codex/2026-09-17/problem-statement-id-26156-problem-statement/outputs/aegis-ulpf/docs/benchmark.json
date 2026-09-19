@@ -1,0 +1,14 @@
+{
+  "system": "macOS-26.3-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "python": "3.14.0",
+  "events": 2000,
+  "seconds": 0.914,
+  "events_per_second": 2187.8,
+  "p95_processing_ms": 0.08,
+  "normalized": 1600,
+  "unparsed": 400,
+  "seal_seconds": 0.113,
+  "proof_verified": true,
+  "scope": "Sequential local Store.ingest; SQLite WAL/FULL; 5 synthetic formats; includes raw+revision writes; excludes network, LLM and concurrent dashboard. Not a production load or billion/day test."
+}

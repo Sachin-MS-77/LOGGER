@@ -119,7 +119,12 @@ code, .mono {
   padding: 26px 14px 20px;
   background: var(--nav);
   border-right: 1px solid #ffffff06;
-  position: relative;
+  position: fixed;
+  inset: 0 auto 0 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  overflow-y: auto;
 }
 .sidebar::after {
   content: '';
