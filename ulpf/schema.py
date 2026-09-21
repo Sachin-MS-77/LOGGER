@@ -15,6 +15,10 @@ SCHEMA = {
     "severities": ["unknown", "informational", "low", "medium", "high", "critical"],
 }
 SCHEMA_HASH = hashlib.sha256(json.dumps(SCHEMA, sort_keys=True).encode()).hexdigest()
+# Only the name changed. Accept this precise historical schema for signed
+# mapping imports; never rewrite old signed payloads or normalized revisions.
+LEGACY_SCHEMA_HASH = hashlib.sha256(json.dumps({**SCHEMA, "name": "aegis.network_event"}, sort_keys=True).encode()).hexdigest()
+COMPATIBLE_SCHEMA_HASHES = frozenset((SCHEMA_HASH, LEGACY_SCHEMA_HASH))
 
 def utcnow():
     return datetime.now(timezone.utc).isoformat(timespec="milliseconds")

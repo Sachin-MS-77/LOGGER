@@ -48,10 +48,10 @@ class SinkInput(BaseModel):
     url: str=Field(max_length=2000)
 
 def create_app(data_dir=None, start_receivers=True):
-    directory=Path(data_dir or os.getenv("LOGFLUX_DATA_DIR", os.getenv("LOGFLUX_DATA_DIR","data")))
+    directory=Path(data_dir or os.getenv("LOGFLUX_DATA_DIR", os.getenv("AEGIS_DATA_DIR","data")))
     directory.mkdir(parents=True,exist_ok=True)
     token_path=directory/"admin-token"
-    token=os.getenv("LOGFLUX_ADMIN_TOKEN", os.getenv("LOGFLUX_ADMIN_TOKEN"))
+    token=os.getenv("LOGFLUX_ADMIN_TOKEN", os.getenv("AEGIS_ADMIN_TOKEN"))
     if not token:
         if token_path.exists(): token=token_path.read_text().strip()
         else:
@@ -74,10 +74,10 @@ def create_app(data_dir=None, start_receivers=True):
     async def lifespan(app):
         store=Store(directory); app.state.store=store; app.state.stop=asyncio.Event(); app.state.background_error=None
         app.state.demo={"running":False,"processed":0,"total":0}; app.state.demo_task=None
-        receiver=Receivers(store,os.getenv("LOGFLUX_SYSLOG_HOST", os.getenv("LOGFLUX_SYSLOG_HOST","127.0.0.1")),int(os.getenv("LOGFLUX_SYSLOG_PORT", os.getenv("LOGFLUX_SYSLOG_PORT","5514"))),
-                           int(os.getenv("LOGFLUX_TLS_PORT", os.getenv("LOGFLUX_TLS_PORT","6514"))),os.getenv("LOGFLUX_TLS_CERT", os.getenv("LOGFLUX_TLS_CERT")),os.getenv("LOGFLUX_TLS_KEY", os.getenv("LOGFLUX_TLS_KEY")),os.getenv("LOGFLUX_TLS_CA", os.getenv("LOGFLUX_TLS_CA")))
+        receiver=Receivers(store,os.getenv("LOGFLUX_SYSLOG_HOST", os.getenv("AEGIS_SYSLOG_HOST","127.0.0.1")),int(os.getenv("LOGFLUX_SYSLOG_PORT", os.getenv("AEGIS_SYSLOG_PORT","5514"))),
+                           int(os.getenv("LOGFLUX_TLS_PORT", os.getenv("AEGIS_TLS_PORT","6514"))),os.getenv("LOGFLUX_TLS_CERT", os.getenv("AEGIS_TLS_CERT")),os.getenv("LOGFLUX_TLS_KEY", os.getenv("AEGIS_TLS_KEY")),os.getenv("LOGFLUX_TLS_CA", os.getenv("AEGIS_TLS_CA")))
         app.state.receivers=receiver
-        lab_receiver=Receivers(store,"127.0.0.1",int(os.getenv("LOGFLUX_LAB_PORT", os.getenv("LOGFLUX_LAB_PORT","5515"))),mode="lab")
+        lab_receiver=Receivers(store,"127.0.0.1",int(os.getenv("LOGFLUX_LAB_PORT", os.getenv("AEGIS_LAB_PORT","5515"))),mode="lab")
         app.state.lab_receivers=lab_receiver
         store.recover()
         if start_receivers:
@@ -338,4 +338,4 @@ async def deliver_outbox(store):
 
 if __name__=="__main__":
     import uvicorn
-    uvicorn.run(create_app(),host=os.getenv("LOGFLUX_HOST", os.getenv("LOGFLUX_HOST","127.0.0.1")),port=int(os.getenv("LOGFLUX_PORT", os.getenv("LOGFLUX_PORT","8765"))),log_level="info")
+    uvicorn.run(create_app(),host=os.getenv("LOGFLUX_HOST", os.getenv("AEGIS_HOST","127.0.0.1")),port=int(os.getenv("LOGFLUX_PORT", os.getenv("AEGIS_PORT","8765"))),log_level="info")

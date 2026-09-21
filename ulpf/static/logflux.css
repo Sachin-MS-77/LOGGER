@@ -467,6 +467,7 @@ h1 {
 }
 .metric-value span { font-size: 17px; color: var(--muted); font-weight: 400; }
 .metric-foot {
+  display: block;
   font-size: 10px;
   color: var(--muted);
   margin-top: 10px;
