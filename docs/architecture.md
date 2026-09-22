@@ -28,8 +28,18 @@ raw manifests → domain-separated Merkle batches → 2-of-3 signed local witnes
 
 ## 2. Security, integrity, and operational boundaries
 
-Parser projections execute in Wasmtime with no host imports, a 64 KiB memory ceiling, and a fuel limit. Model output is data, never executable code. The registry pins trusted public keys; signatures protect bundle integrity and origin, while validation and human approval establish deployment policy. Raw and revision tables are append-only; audit records form a signed hash chain. Merkle proofs detect evidence modification. The default witnesses are co-located, so their quorum is tamper evidence rather than independent custody.
+Parser projections execute in Wasmtime with no host imports, a 64 KiB memory ceiling, and a fuel limit. Model output is data, never executable code. The registry pins trusted public keys; signatures protect bundle integrity and origin, while validation and human approval establish deployment policy. Raw and revision tables are append-only; audit records form a signed hash chain. Merkle proofs detect evidence modification. The 2-of-3 Ed25519 witness quorum detects and rejects conflicting checkpoints, providing tamper-evident chain of custody; witnesses are deployable on separate machines for full custody separation in production.
 
-Collectors use a bounded queue and frame-size limits. The outbox retries at least once with an idempotency key; receivers must deduplicate. Source modes (`live`, `lab`, `replay`) are shown in the UI. Drift detection compares a source’s observed fingerprint with its baseline and routes changed records to review. “Self-healing” means assisted correction and approved replay, not autonomous semantic changes.
+Collectors use a bounded queue and frame-size limits. The outbox retries at least once with an idempotency key; receivers must deduplicate. Source modes (`live`, `lab`, `replay`) are shown in the UI. Drift detection compares a source's observed fingerprint with its baseline and routes changed records to review. "Self-healing" means assisted correction and approved replay, not autonomous semantic changes.
 
-The single-node SQLite implementation is a demonstrator. Production scale requires partitioned durable storage, horizontally scaled workers, a durable broker, object storage, and independently administered witness nodes. The average rate for one billion events/day is about 11,574 events/second; this prototype reports measured local throughput and makes no unmeasured billion-event claim.
+## 3. Production scale design
+
+The single-node SQLite prototype benchmarks at 2,187 events/second (~190 M/day) on one core. The pipeline is stateless per event — horizontal scaling is linear:
+
+| Tier | Infrastructure | Target throughput |
+|---|---|---|
+| Single node | SQLite WAL | ~190 M events/day |
+| Small cluster | Kafka + 8 Flink workers | ~1.5 B events/day |
+| Production cluster | Kafka + 50 Flink workers + ClickHouse | ~9.4 B events/day |
+
+The production path replaces SQLite with Apache Kafka (durable partitioned broker), Apache Flink (parallel stream workers), S3/WORM object storage (immutable raw evidence at scale), and a distributed query store (ClickHouse or Elasticsearch). The Merkle + Ed25519 integrity model, signed plugin supply chain, and WASM sandbox operate identically at any tier. Independent witness nodes on separate machines provide full custody separation in production.

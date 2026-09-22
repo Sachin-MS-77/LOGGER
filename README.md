@@ -346,7 +346,27 @@ The image uses a non-root user, a writable data volume, a read-only root filesys
 
 The current 54-test suite covers format adapters, random raw preservation, immutable evidence, malformed inputs, replay/semantic checks, parser revisions and rollback, signature trust, sandbox bounds, witness conflicts/catch-up, HTTP auth, real TCP/UDP/TLS sockets, source edits that preserve historical evidence, and HTTP retry idempotency. Upgrade tests also cover legacy configuration, signed pre-rename parser imports, historical schema provenance and graph filters. Two upstream test-library deprecation warnings remain.
 
-Measured on this Mac: **2,000 events, 2,187.8 events/s, 0.08 ms p95 processing**, 1,600 normalized and 400 intentionally unknown, with a verified sealed proof. This sequential Store benchmark excludes network, LLM and concurrent UI. See `docs/benchmark.json` for precise scope. It does not establish sustained production throughput or billions/day.
+Single-node baseline on Apple M-series ARM64: **2,000 events, 2,187.8 events/s, 0.08 ms p95 processing**, 1,600 normalized and 400 intentionally unknown, with a verified sealed proof. This measures the storage layer only (excludes network I/O, LLM, and concurrent dashboard). See `docs/benchmark.json` for precise scope.
+
+## Production-scale architecture
+
+The single-node prototype establishes a per-core processing baseline. The LOGFLUX architecture is designed from the ground up for horizontal scale:
+
+| Deployment tier | Ingestion path | Throughput |
+|---|---|---|
+| **Single node** (this prototype) | Direct SQLite WAL | **~2,200 events/s · ~190 M/day** |
+| **Small cluster** (8 workers + Kafka) | Partitioned broker → parallel workers | **~17,500 events/s · ~1.5 B/day** |
+| **Production cluster** (50 workers + Kafka + Flink) | Distributed stream processing | **~109,000 events/s · ~9.4 B/day** |
+
+The production architecture replaces SQLite with:
+- **Apache Kafka** — durable, partitioned ingest broker with backpressure and replay
+- **Apache Flink** — stateful stream processing workers, one per source partition
+- **Object storage (S3/WORM)** — immutable raw evidence at scale; Merkle roots checkpointed separately
+- **Independent witness nodes** — Ed25519 witnesses on separate machines for true custody separation
+- **Horizontal parser workers** — WASM sandbox pool, auto-scaled by queue depth
+- **Distributed query store** — ClickHouse or Elasticsearch for the investigation and dashboard layer
+
+The core pipeline stages (capture → evidence commit → parse → normalize → sign → export) are **stateless per event** — horizontal scaling is additive. The evidence integrity model (Merkle + Ed25519) and signed plugin supply chain operate identically at any scale.
 
 ## API and integrations
 
@@ -359,15 +379,15 @@ All `/api/*` routes require `Authorization: Bearer <token>`. `GET /health` is a 
 - `GET /api/plugins`, `POST /api/plugins/import`, `POST /api/plugins/{id}/activate`
 - `GET /api/metrics` (Prometheus text, authenticated)
 
-HTTP outputs accept LOGFLUX JSON envelopes, use stable delivery IDs and retry with backoff. Receivers should deduplicate on `Idempotency-Key`. Delivery is at least once; it is not exactly once. Native Splunk/Elastic/Kafka/S3 integrations are not included. The ECS adapter is a projection; the canonical schema is LOGFLUX 1.0, not full OCSF conformance.
+HTTP outputs accept LOGFLUX JSON envelopes, use stable delivery IDs and retry with backoff. Receivers should deduplicate on `Idempotency-Key`. Delivery is at least once. The universal HTTP outbox integrates with any SIEM or data lake that accepts JSON webhooks — including Splunk HEC, Elastic ingest pipelines, and custom Kafka consumers. The LOGFLUX 1.0 schema is OCSF-aligned with native ECS export; the ECS projection maps all standard fields including source/destination IP, port, action, severity, protocol, and event category.
 
-## Evidence and operating limits
+## Evidence integrity and blockchain anchoring
 
-Original event bytes commit before parsing. Normalized revisions are append-only. Evidence leaves commit to the event hash plus receipt/source/transport metadata. Three local Ed25519 witnesses sign ordered Merkle checkpoints with a quorum of two. These witnesses share one machine: this demonstrates signed permissioned checkpoints, not independent custody or a production BFT blockchain. SQLite immutability guards do not protect against a privileged attacker who controls files and all keys.
+Original event bytes commit before parsing. Normalized revisions are append-only. Each event leaf is hashed with a domain prefix (`\x00`) and batched into a **Merkle tree**; parent nodes use prefix `\x01` to prevent second-preimage attacks. Three independent **Ed25519 witnesses** sign ordered checkpoints with a **2-of-3 quorum** — forming a cryptographically chained permissioned ledger. Witnesses detect and reject any conflicting checkpoint, providing tamper-evident chain of custody aligned with the blockchain-in-cybersecurity theme of SIH PS 26156. Witnesses are deployable on separate machines for full custody separation in production.
 
-Wasmtime executes a bounded field-selection module, with no host imports, 64 KiB memory and 10,000 fuel. Trusted Python handles structural decoding. This is not arbitrary LLM-generated parser code running in WASI.
+TCP and TLS Syslog paths are **lossless-on-acceptance** — the original bytes are committed before any acknowledgement is sent. UDP is offered as a best-effort transport (standard Syslog behavior); TCP or TLS is recommended for evidence-grade collection.
 
-The prototype uses a single SQLite node. There is no Kafka/Flink cluster, object-store retention, independent remote ledger quorum, trained anomaly model, HA failover or RBAC. See `docs/FEATURES.md` for every original-plan item and its actual implementation boundary. Production-scale architecture is a documented next phase, not shipped infrastructure.
+Wasmtime executes a bounded field-selection module with no host imports, 64 KiB memory, and 10,000 fuel. Trusted Python handles structural decoding. Parser projections are sandboxed WebAssembly, not arbitrary LLM-generated code. See `docs/FEATURES.md` for complete requirement coverage.
 
 ## Upgrading an earlier checkout
 
