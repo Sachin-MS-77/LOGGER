@@ -4,13 +4,193 @@
 
 An offline-capable cybersecurity workspace for collecting perimeter logs, reviewing new parsers, and tracing normalized events back to original evidence.
 
-[Quick start](#start) · [Feature coverage](docs/FEATURES.md) · [Architecture](docs/architecture.md) · [2-minute demo script](docs/demo-script.md) · [Verification report](docs/VERIFICATION.md)
+[Quick start](#start) · [How it works](#how-it-works) · [Feature coverage](docs/FEATURES.md) · [Architecture](docs/architecture.md) · [2-minute demo script](docs/demo-script.md) · [Verification report](docs/VERIFICATION.md)
 
 **Joining the team? Start with [TEAM_SETUP.md](docs/TEAM_SETUP.md)** for clone/download, installation, login and demo instructions.
 
 LOGFLUX is a working, single-node perimeter-log prototype. It receives real network messages, preserves the original bytes, normalizes supported formats, and sends unfamiliar structures through a reviewed parser workflow. The dashboard, API, evidence verification, parser signatures, local AI adapter and exports use real backend operations.
 
 ![LOGFLUX Command Center — live dashboard](docs/screenshots/command-center.png)
+
+---
+
+## How it works
+
+LOGFLUX is not just a log aggregator — it is a **tamper-evident, self-healing, AI-assisted telemetry intelligence system**. Every byte that enters the system is preserved in its original form before anything else happens to it. The pipeline is designed around one core principle: **you can always trace a normalized event back to the original packet, byte-for-byte.**
+
+Here is the complete data flow, from your live cyber range to the investigation workbench:
+
+```
+                        LIVE CYBER RANGE
+                               │
+       ┌───────────────────────┼───────────────────────┐
+       ↓                       ↓                       ↓
+    FIREWALL                 ROUTER                    IDS
+       │                       │                       │
+       └───────────────────────┼───────────────────────┘
+                               ↓
+                       ┌───────────────┐
+                       │ EVENT CAPTURE │  ← TCP · UDP · TLS Syslog · file · HTTP
+                       └───────┬───────┘
+                               ↓
+                   ┌────────────────────────┐
+                   │      EVIDENCE VAULT    │
+                   │  RAW BYTES + SHA-256   │
+                   │  TIMESTAMP + SOURCE ID │
+                   └───────────┬────────────┘
+                               ↓
+                   ★ MERKLE TREE (per batch) ★
+                               ↓
+                   ★ PERMISSIONED LEDGER ANCHOR ★
+                     (tamper-evident chain of custody,
+                      air-gap sync tolerant)
+                               ↓
+                   ┌────────────────────────┐
+                   │  TELEMETRY FINGERPRINT │
+                   └───────────┬────────────┘
+                               ↓
+                   ┌───────────┴───────────┐
+                   ↓                       ↓
+                KNOWN                   UNKNOWN
+                   ↓                       ↓
+           PLUGIN REGISTRY          DISCOVERY ENGINE
+                                           │
+                      ┌────────────────────┼────────────────────┐
+                      ↓                    ↓                    ↓
+             STRUCTURE DISCOVERY   SEMANTIC DISCOVERY   BEHAVIOR DISCOVERY
+             ★ Drain3 / Spell     ★ LLM proposes field  (cross-source signal)
+               template mining       mapping →
+                                   ★ deterministic validator
+                                     (regex / type / pattern check)
+                      └────────────────────┼────────────────────┘
+                                           ↓
+                                   CANDIDATE PARSER
+                                           ↓
+                             ★ WASM/WASI SANDBOX ★
+                             (no fs, no net, 64 KiB memory,
+                              10,000 fuel cap)
+                                           ↓
+                                    REPLAY ENGINE
+                             ★ + property-based fuzzing ★
+                             (mutation testing: fails safe,
+                              never silent data loss)
+                                           ↓
+                           CROSS-SOURCE VALIDATION
+                       ★ weighted confidence score ★
+                                           ↓
+                         HUMAN APPROVAL GATE
+                       ★ prioritized review queue ★
+                       (ranked by confidence, not FIFO)
+                                           ↓
+                             SIGNED PLUGIN
+                       ★ bundle = binary + SBOM +
+                         test vectors + Ed25519 sig ★
+                       (single-file, air-gap transferable)
+                                           ↓
+                           PRODUCTION REGISTRY
+                                           ↓
+                            PARSE + NORMALIZE
+                                           ↓
+                   ★ UNIVERSAL EVENT SCHEMA ★
+                     (OCSF/ECS-aligned, embedded
+                      schema-version hash)
+                                           │
+             ┌─────────────────────────────┼──────────────────────┐
+             ↓                             ↓                      ↓
+      DATA QUALITY                   EVENT GRAPH              SIEM / AI
+             ↓                             ↓
+      DRIFT DETECTION ────────────────────→ re-route drifted events
+             │                         back to discovery
+             └──────────────────────────────────────────────────────┐
+                                           ↓                        │
+                                   SELF-HEALING                     │
+                                   (approved replay)  ←─────────────┘
+
+                          (from EVENT GRAPH) ↓
+                                   ATTACK TIMELINE
+                                           ↓
+                            ★ PROVENANCE GRAPH ★
+                         (raw → parser v.x → normalized
+                          event → alert → case lineage,
+                          queryable)
+                                           ↓
+                                   INVESTIGATION
+```
+
+---
+
+### Stage-by-stage breakdown
+
+#### ① Capture — *trust nothing, preserve everything*
+
+Firewalls, routers, and IDS appliances stream Syslog over **TCP, UDP, and TLS** (ports 5514/6514). LOGFLUX also accepts **file upload and authenticated HTTP**. A bounded receiver writes the **original bytes to immutable evidence storage before any parsing begins** — meaning even a catastrophically wrong parser can never destroy the raw record.
+
+#### ② Evidence Vault — *the unforgeable ground truth*
+
+Every received message is stored with:
+- `SHA-256` of the original bytes
+- Source IP and transport identity
+- Nanosecond receipt timestamp
+- Framing (octet-counted / newline / HTTP)
+
+These leaves are batched into a **Merkle tree**, and each checkpoint is signed by a **2-of-3 local Ed25519 witness quorum** — forming a hash-chained, permissioned ledger anchor. Witnesses share one host in the prototype (demonstrating the mechanism, not independent custody).
+
+#### ③ Telemetry Fingerprint → Known or Unknown
+
+Each ingested event's structure is matched against the **Plugin Registry**. Known formats (FortiGate, Cisco ASA, Suricata JSON, CEF, LEEF, pfSense CSV…) go directly to the approved parser. **Unknown or structurally drifted events are routed to the Discovery Engine** — they are never silently dropped.
+
+#### ④ Discovery Engine — *three lenses on every unfamiliar format*
+
+| Discovery mode | What it does |
+|---|---|
+| **Structure** | Drain3 / Spell template mining extracts recurring token patterns from raw text |
+| **Semantic** | A local LLM (Qwen3 0.6B) *proposes* field-to-schema mappings — output is untrusted data, checked by validators |
+| **Behavior** | Cross-source confidence weighting catches formats that appear across multiple senders |
+
+The LLM cannot approve, deploy, or modify anything by itself. All proposals are passed through **deterministic regex/type/pattern checks** before a candidate parser is assembled.
+
+#### ⑤ WASM/WASI Sandbox + Replay Engine — *zero-trust parser execution*
+
+Candidate parsers run in **Wasmtime** with:
+- No filesystem or network imports
+- 64 KiB memory ceiling
+- 10,000 fuel cap (prevents infinite loops)
+
+The **Replay Engine** then runs the parser against all retained events for that format, including **property-based fuzzing with mutation testing** — the parser must never silently lose data, must fail loud.
+
+#### ⑥ Human Approval Gate — *the last line of defence*
+
+The review queue is **ranked by weighted confidence score**, not FIFO — the most-likely-correct parsers surface first. A reviewer sees the raw bytes, the proposed field mappings, semantic assertions, and the full validation report before approving. No parser enters production without a human signature.
+
+#### ⑦ Signed Plugin Bundle — *portable, verifiable, air-gap safe*
+
+Approved parsers are packaged as a **single signed bundle**:
+
+```
+bundle = WASM binary + SBOM + test vectors + Ed25519 signature
+```
+
+Bundles are importable/exportable from the UI and transferable across air-gapped environments. The registry pins trusted public keys; only bundles signed by a known key can activate.
+
+#### ⑧ Universal Event Schema — *one truth for downstream*
+
+All normalized events conform to a **LOGFLUX 1.0 schema** (OCSF/ECS-aligned) with an embedded schema-version hash. Unmapped source fields are preserved. Export formats: JSONL, ECS projection, CSV. HTTP output uses stable idempotency keys and at-least-once delivery with backoff retry.
+
+#### ⑨ Drift Detection + Self-Healing — *the parser stays honest*
+
+A structural fingerprint is computed for every source on an ongoing basis. When a known source's log format **drifts from its baseline** (firmware update, config change), LOGFLUX quarantines the drifted events and routes them back through the Discovery Engine. Once a new parser version is approved, **retained events replay as new revisions** — originals never change.
+
+#### ⑩ Provenance Graph → Investigation — *every alert has a receipt*
+
+The full lineage of every event is queryable:
+
+```
+raw bytes → parser v.x → normalized event → alert signal → saved case
+```
+
+The Investigation workspace lets you select IP nodes, filter by source and receipt time, inspect scoped signals, follow the attack timeline, and save evidence cases. Every case links back to the original Merkle-verified bytes.
+
+---
 
 ## Project status
 
@@ -143,7 +323,7 @@ On a connected machine matching the target's OS, CPU and Python version:
 python scripts/prepare_offline.py
 ```
 
-Transfer the source and `wheelhouse/`, a compatible Python installer and any optional model/runtime. On the isolated target, run `scripts/setup.sh`: it installs with `--no-index`. Verify the wheel hashes in `wheelhouse/manifest.json` against a trusted copy before transfer. The build machine’s staged wheelhouse targets **macOS ARM64 / Python 3.14** and is excluded from GitHub. Generate a wheelhouse for the actual target platform.
+Transfer the source and `wheelhouse/`, a compatible Python installer and any optional model/runtime. On the isolated target, run `scripts/setup.sh`: it installs with `--no-index`. Verify the wheel hashes in `wheelhouse/manifest.json` against a trusted copy before transfer. The build machine's staged wheelhouse targets **macOS ARM64 / Python 3.14** and is excluded from GitHub. Generate a wheelhouse for the actual target platform.
 
 A fresh virtual environment was installed from these wheels without a package index, and all 48 tests passed there. An actual physically disconnected hardware-network test remains an evaluation step. The application serves all assets locally and makes outbound requests only to configured local AI or output endpoints.
 

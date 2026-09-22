@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
-<defs><filter id="cyber" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0"/><feColorMatrix type="hueRotate" values="175"/><feComponentTransfer><feFuncR type="gamma" amplitude="1.2" exponent=".75" offset="0"/><feFuncG type="gamma" amplitude="1.2" exponent=".75" offset="0"/><feFuncB type="gamma" amplitude="1.2" exponent=".75" offset="0"/></feComponentTransfer></filter></defs>
-<rect width="1200" height="675" fill="#071326"/>
-<image href="chimera-flowchart.svg" x="0" y="0" width="1200" height="675" preserveAspectRatio="none" filter="url(#cyber)"/>
-<rect x="18" y="18" width="1164" height="639" rx="18" fill="none" stroke="#37d9ff" stroke-width="2" opacity=".65"/>
-<text x="42" y="642" font-family="Arial,sans-serif" font-size="13" letter-spacing="2" fill="#37d9ff">CHIMERA // ADVERSARIAL-READY TELEMETRY</text>
-</svg>
