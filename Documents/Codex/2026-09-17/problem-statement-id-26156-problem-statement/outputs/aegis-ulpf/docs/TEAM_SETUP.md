@@ -28,8 +28,8 @@ py -3 -m venv .venv
 
 1. Keep the server terminal open and visit http://127.0.0.1:8765.
 2. Open the newly generated `data/admin-token` file locally and paste its contents into the dashboard login. Each installation generates its own token. Do not commit or share that file.
-3. Choose **Command center → Launch demo** to populate the fresh database with labeled synthetic events.
-4. Explore Event stream, Parser lab, Evidence vault and Investigation. Choose **Daylight** for the blue-and-white theme.
+3. Choose **Command center → Run demo replay** to populate the fresh database with labeled synthetic events.
+4. Explore Event stream, Parser lab, Evidence vault and Investigation. Use **Obsidian** for the dark violet dashboard, or **Pearl** / **Rose** in the theme selector.
 
 The dashboard and core workflow need no frontend build, cloud account or local language model. Manual parser review works immediately. For optional local AI, real-device connections, offline deployment and Docker instructions, see [README](../README.md). Docker execution and Windows/Linux installations have not been validated on the build machine.
 

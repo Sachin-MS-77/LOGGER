@@ -1,6 +1,6 @@
 # Requirement and original-plan coverage
 
-Build review: 18 September 2026. Status describes shipped behavior, not future intent.
+Updated review: 21 September 2026. See [verification report](VERIFICATION.md) for the current 54-test run. Status describes shipped behavior, not future intent.
 
 ## SIH requirements
 
@@ -48,6 +48,10 @@ Build review: 18 September 2026. Status describes shipped behavior, not future i
 | Raw-parser-event-alert-case provenance | Revision/alert/case joins shown in event inspector | Implemented |
 | Offline packaging | Pinned source dependencies, platform-specific wheelhouse, installer, staged model on demo machine | Source ZIP excludes model weights, private keys and runtime data |
 | Submission assets | Source archive, README, 2-page architecture, 5-slide presentation, <2-minute walkthrough | See submission-checklist.md |
+
+## Fracture Index added in the UI redesign
+
+The gauge is an uncalibrated count formula based on denied/alerted events, source timestamps and unique destinations. Taint is unavailable; the current formula reaches at most 75 on the 0–100 display. It is not a threat probability, learned model or validated accuracy measure. The formula is shown in the UI and README.
 
 ## Evaluation claims
 
