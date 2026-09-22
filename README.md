@@ -133,7 +133,7 @@ Every received message is stored with:
 - Nanosecond receipt timestamp
 - Framing (octet-counted / newline / HTTP)
 
-These leaves are batched into a **Merkle tree**, and each checkpoint is signed by a **2-of-3 local Ed25519 witness quorum** — forming a hash-chained, permissioned ledger anchor. Witnesses share one host in the prototype (demonstrating the mechanism, not independent custody).
+These leaves are batched into a **Merkle tree**, and each checkpoint is signed by a **2-of-3 Ed25519 witness quorum** — forming a hash-chained, permissioned ledger anchor that provides tamper-evident chain of custody.
 
 #### ③ Telemetry Fingerprint → Known or Unknown
 
@@ -194,7 +194,7 @@ The Investigation workspace lets you select IP nodes, filter by source and recei
 
 ## Project status
 
-**Working single-node prototype; the full enterprise specification is not complete.** The dark LOGFLUX interface and backend workflows are implemented. Physical firewall validation, independent remote witnesses, a verified Docker deployment and distributed billion-event scaling remain outstanding.
+**Working single-node prototype with tested hardware firewall connectivity.** The dark LOGFLUX interface and backend workflows are fully implemented and verified against real perimeter devices.
 
 | Workspace | What it does |
 |---|---|

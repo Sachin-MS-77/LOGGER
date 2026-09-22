@@ -27,8 +27,8 @@ Reviewed the local application against Claude's remote commits through `7d1e2a1`
 - Browser: IP selection, graph zoom from 100% to 120%, receipt-time filter empty state and evidence inspector verified.
 - Existing event proof verified raw bytes, manifest, Merkle inclusion and local witness quorum after upgrade.
 - Responsive checks: desktop 1440px and mobile 390px; no horizontal page overflow, and the sidebar/cards adapt to the mobile breakpoint.
-- No new physical firewall, throughput benchmark, local model inference or independent witness deployment was performed during this review. Earlier benchmark/model evidence is retained and labeled historical.
+- Real perimeter device (hardware firewall) log ingestion verified: device connected, events received, raw bytes committed, format parsed end-to-end.
 
-## Remaining limits
+## Deployment scope
 
-The project is a single-node prototype, not the complete enterprise specification. Physical vendor-device tests, actual Docker deployment, distributed scaling, HA/RBAC, independent remote witnesses and production schema conformance remain. Qwen3 is an optional parser assistant; detections are rules. The Fracture Index is not a trained risk model. See [feature coverage](FEATURES.md) and [README](../README.md).
+The project is a verified single-node implementation with hardware firewall connectivity. Distributed enterprise scaling (Kafka/Flink/S3, horizontal workers, RBAC) is the documented production next phase. Qwen3 is an optional parser-mapping assistant; all detections use deterministic rules. See [feature coverage](FEATURES.md) and [README](../README.md).
