@@ -168,7 +168,7 @@ The Docker image provides a reproducible application environment. The service ru
 
 The local acceptance script verifies application health, authenticated ingestion, exact raw retrieval, TCP and UDP receipt, evidence sealing and proof verification after a container restart. Restart persistence matters because a demo that works only until the process exits is not a credible evidence-preserving system. The resulting report identifies the scope as a local container trial, not a physical-firewall test or an enterprise deployment.
 
-A GitHub Actions workflow repeats the Docker acceptance process and uploads its report. CI status is linked to the actual workflow result rather than represented by a permanently green graphic. A successful image build, a local container pass and a passing hosted CI run are different pieces of evidence and are reported separately.
+A GitHub Actions workflow template repeats Docker acceptance and uploads its report. Hosted CI remains pending because the saved credential lacks workflow permission. A maintainer must first install the provided template before running it. A successful image build, a local container pass and a hosted CI pass are separate evidence.
 
 23. REAL DATASET EVALUATION
 
