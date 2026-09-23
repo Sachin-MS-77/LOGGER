@@ -2,7 +2,7 @@
 import json
 from datetime import datetime,timezone,timedelta
 
-def scenario(count=120):
+def scenario(count=2187):
     start=datetime.now(timezone.utc)
     for i in range(count):
         ts=(start+timedelta(milliseconds=i*75)).isoformat()

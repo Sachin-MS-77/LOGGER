@@ -1,0 +1,56 @@
+{
+  "platform": "macOS-26.3-arm64-arm-64bit-Mach-O",
+  "python": "3.14.0",
+  "scope": "Actual isolated application + SQLite FULL + real loopback sockets, concurrent senders and background sealing; synthetic fixed-format events. Same machine sender and receiver. Offered rate may be throttled by TCP backpressure. No real-device or distributed capacity claim.",
+  "runs": [
+    {
+      "transport": "tls",
+      "offered_eps": 500,
+      "duration_seconds": 120,
+      "connections": 4,
+      "sent": 60000,
+      "actual_sent_eps": 500.0,
+      "durably_received_in_window": 59925,
+      "live_socket_eps": 499.38,
+      "received_after_drain": 59925,
+      "drain_seconds_limit": 15,
+      "not_received_after_drain": 75,
+      "unreceived_percent": 0.125,
+      "senders": [
+        {
+          "connection": 0,
+          "sent": 15000,
+          "send_errors": 0,
+          "uncertain_last_frame": 0,
+          "active_seconds": 120.079
+        },
+        {
+          "connection": 1,
+          "sent": 15000,
+          "send_errors": 0,
+          "uncertain_last_frame": 0,
+          "active_seconds": 120.066
+        },
+        {
+          "connection": 2,
+          "sent": 15000,
+          "send_errors": 0,
+          "uncertain_last_frame": 0,
+          "active_seconds": 120.054
+        },
+        {
+          "connection": 3,
+          "sent": 15000,
+          "send_errors": 0,
+          "uncertain_last_frame": 0,
+          "active_seconds": 120.075
+        }
+      ],
+      "statuses": {
+        "normalized": 59925
+      },
+      "arithmetic_events_per_day": 43146000,
+      "day_projection_note": "Arithmetic only from this short run; no 24-hour measurement."
+    }
+  ]
+}

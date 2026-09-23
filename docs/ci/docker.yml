@@ -1,0 +1,29 @@
+name: Docker acceptance
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and start
+        run: docker compose up --build -d
+      - name: Wait for healthy API
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8765/health | python3 -c 'import json,sys; assert json.load(sys.stdin)["status"] == "ok"'; then exit 0; fi
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+      - name: Verify bytes, sockets and restart persistence
+        run: python3 scripts/verify_docker.py --container "$(docker compose ps -q logflux)" --api http://127.0.0.1:8765 --port 5514 --output /tmp/docker-verification.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docker-verification
+          path: /tmp/docker-verification.json
+      - name: Shutdown
+        if: always()
+        run: docker compose down -v

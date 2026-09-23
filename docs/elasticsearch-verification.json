@@ -1,0 +1,8 @@
+{
+  "elasticsearch_version": "8.17.3",
+  "native_bulk_accepted": true,
+  "retry_document_count": 1,
+  "raw_hash_reference_preserved": true,
+  "ecs_source_ip_verified": true,
+  "scope": "Disposable loopback Elasticsearch node; live native connector and stable-ID retry. Item failure handling separately unit-tested. No authenticated remote-cluster acceptance claim."
+}

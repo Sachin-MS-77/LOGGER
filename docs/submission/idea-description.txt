@@ -1,0 +1,237 @@
+1. IDEA OVERVIEW
+
+LOGFLUX is an offline-capable Universal Log Pre-processing Framework proposed for Smart India Hackathon Problem Statement 26156 from the National Technical Research Organisation. It addresses a practical obstacle in security operations: important events arrive from different devices in incompatible formats, and the work required to interpret them often delays investigation. LOGFLUX provides a common processing path that receives perimeter telemetry, preserves the original message, extracts source attributes, normalizes supported fields, and makes the resulting event available for investigation and downstream analysis.
+
+The central idea is controlled adaptability. A new log format should not require an analyst to discard evidence, silently guess field meanings, or deploy unrestricted generated code. LOGFLUX retains unfamiliar records, proposes a mapping, tests that mapping, and requires human approval before a signed parser becomes active. The field-selection module executes in a bounded WebAssembly sandbox. When a format changes, the affected records can be reviewed and replayed into new normalized revisions while their original bytes remain unchanged.
+
+Our current deliverable is a working single-node application, accompanied by reproducible security tests, dataset coverage tools, real socket benchmarks, optional network witness services and a separate broker-to-columnar-storage experiment. The production vision is broader than this prototype. We distinguish verified behavior, experimental extensions and future engineering so that evaluators can reproduce the evidence and judge the remaining work accurately.
+
+2. THE PROBLEM WE ARE SOLVING
+
+An enterprise perimeter may contain firewalls, routers, IDS or IPS sensors, VPN gateways and related network software from several vendors. Their records may use Syslog wrappers, JSON, CEF, LEEF, XML, CSV or proprietary key-value structures. Even when two products report the same connection, one may name an address srcip, another src_ip and another sourceAddress. Their action vocabulary, severity scale, timestamps and framing rules can also differ. A downstream query becomes unreliable when these differences are ignored.
+
+Traditional onboarding frequently depends on a developer reading examples, writing a source-specific parser and maintaining it after upgrades. A seemingly small format change can cause missing fields or incorrect interpretations without an obvious service outage. Analysts then face two problems at once: they cannot consistently query the normalized data, and they may have difficulty proving which original message produced an alert. A dashboard that looks healthy can conceal a growing backlog of poorly understood telemetry.
+
+LOGFLUX treats parsing quality and evidence traceability as parts of the same workflow. Successful processing produces an explicit normalized result. Unfamiliar, drifted, partially valid and failed records remain distinguishable. The framework is intended to reduce repetitive parser work while making uncertainty visible, rather than presenting all incoming data as equally trustworthy.
+
+3. SCOPE AND USERS
+
+The immediate scope follows the problem statement's focus on perimeter network devices. Security operations teams, network administrators, incident investigators and teams operating isolated environments are the intended users. The prototype supports real collection interfaces and several tested device-format subsets, while providing a review path for additional structures. Universal describes the extensible framework and common evidence model; it does not mean every proprietary format is understood without configuration.
+
+A device must expose a usable logging interface. The operator must configure its destination, transport and sender identity. A system with no exportable log stream cannot be connected merely by adding its name to the dashboard. Likewise, a syntactically decoded message is not automatically a semantically correct event. New or ambiguous formats may require a reviewed mapping or a trusted decoder extension.
+
+4. THE PROPOSED SOLUTION
+
+The application combines collection, preservation, normalization, parser governance and investigation in one local workspace. A received message receives an event identity and a receipt timestamp. Its original bytes, cryptographic hash, source and transport metadata are committed before parsing. The processing stage then selects an approved parser or a known adapter. Validated fields are placed in a common event envelope, and source attributes not used by the mapping remain available.
+
+When the framework cannot confidently use an approved mapping, it creates a review candidate rather than inventing missing values. The operator can inspect examples, edit field mappings, add expected semantic values and run validation. Approval produces a versioned, signed parser bundle. Retained events can then be replayed, producing an additional interpretation with a clear link to the original message and the parser version used.
+
+The dashboard brings these operations together across Command Center, Event Stream, Sources, Parser Lab, Evidence Vault, Investigation, and System & Outputs. Every view is backed by application data. Demonstration traffic is labeled as replay or lab traffic, and optional model assistance is distinguishable from deterministic processing. This makes the same application useful both for evaluation and for controlled device-onboarding trials.
+
+5. THE MAIN TECHNICAL DIFFERENTIATOR
+
+The strongest technical feature is the combination of human-reviewed parser adaptation and restricted WebAssembly execution. The framework does not take a model's response and execute it as arbitrary Python or an unrestricted regular expression. A proposal is treated as declarative field-mapping data. After checks, the approved selection logic is represented as a WebAssembly module that can choose among known extracted attributes.
+
+The sandbox forbids host imports, limits linear memory to 64 KiB and applies a 10,000-unit execution fuel budget. An infinite loop must trap when fuel is exhausted. A module that requests excessive initial memory must fail. Attempts to access a filesystem, network socket, process environment or host function are rejected because no such imports are allowed. A binary-size limit also bounds the input submitted for compilation, and the selector must expose the expected function signature.
+
+These controls are supported by adversarial tests against the real Wasmtime wrapper. They are a concrete engineering distinction, not a claim that no other team or product uses WebAssembly. The surrounding application still requires ordinary security engineering, and trusted structural decoding remains in Python. A safe execution boundary also does not establish semantic correctness; that is why review and explicit sample expectations remain essential.
+
+6. EVIDENCE PRESERVATION
+
+LOGFLUX separates source evidence from its interpretation. The raw record is stored as bytes, not reconstructed later from a normalized JSON object. This preserves delimiters, line endings and non-text data when the application accepts them. A SHA-256 hash provides a stable way to compare the preserved message with a downloaded copy. Source identity, transport, framing and receipt time are recorded alongside the evidence.
+
+The database protects raw and revision records with append-only behavior enforced by SQL triggers. Parsing errors do not erase the raw record. A crash after the raw commit but before processing leaves a recoverable queued event, and startup recovery can process it later. This separation gives investigators a reliable starting point when a parser is corrected or challenged.
+
+The guarantee begins at durable application acceptance. It does not cover a device that never sends an event, a network packet lost before receipt, a full receiver queue, or an uncommitted message interrupted by a crash. TCP acknowledgements are transport acknowledgements, not proof of an application commit. This boundary is stated explicitly so that lossless preservation is not confused with an impossible guarantee of lossless delivery across every external system.
+
+7. COLLECTION AND TRANSPORTS
+
+The collector supports TCP and UDP Syslog, optional TLS Syslog, authenticated HTTP ingestion and file upload. TCP supports octet-counted framing and newline framing. Octet counting is especially useful when exact message boundaries matter because it does not depend solely on a terminator inside the payload. File replay preserves line terminators and can send records at a controlled offered rate through the actual listener.
+
+TCP or TLS is recommended for routine evidence-oriented collection. UDP remains available for devices that require it, with its best-effort behavior stated in the interface and documentation. Receiver counters make rejected frames, overflow and other collection errors observable. TLS uses certificate validation, and client certificates can be required when the deployment supplies a trusted CA configuration.
+
+The supplied replay and benchmark tools operate independently of the production dataset. An isolated benchmark creates its own collector and temporary database. A physical-device trial instead requires the team's device configuration and acceptance evidence. The two should never be described interchangeably: synthetic data sent through a real socket validates the transport path, while a hardware trial validates a particular device and configuration.
+
+8. SOURCE IDENTITY AND ATTRIBUTION
+
+Each source has a name, kind, enabled state, traffic mode and optional peer address. This helps operators distinguish a firewall feed from an IDS feed and distinguish ordinary incoming traffic from a demonstration replay. Historical evidence retains the source metadata captured at receipt even if the operator later edits the current source description. Renaming a device should not rewrite what an investigator sees about an older event.
+
+An IP address by itself is not strong identity. Shared collectors, NAT and forwarding systems can make several devices appear under one address. A deployment should therefore define its source-registration policy and use authenticated transport where possible. The prototype exposes source and peer information without claiming that it proves the physical origin of every message.
+
+For an SIH demonstration, source attribution is also a matter of clarity. A replayed FortiGate-format fixture is labeled as replay, not presented as a live firewall event. A public archive replay is identified by its dataset and file. This lets the judges see what has actually been demonstrated and allows a teammate to repeat the same trial without relying on a hidden preloaded database.
+
+9. STRUCTURAL DECODING
+
+LOGFLUX first extracts the structure of a message. Existing decoders cover common text and structured representations, including JSON, safe XML, CEF, LEEF, headered CSV, Syslog wrappers and key-value records. Explicit adapters handle tested subsets such as FortiGate, Cisco ASA deny messages, Suricata JSON, pfSense filterlog and the newly added iptables records. Unsupported layouts are not silently forced into a known vendor's meaning.
+
+Real public firewall data exposed a practical issue: iptables ICMP messages can contain fields from an embedded packet, repeating names such as SRC, DST and LEN. A generic key-value dictionary either rejects duplicates or risks overwriting the outer packet's attributes. The targeted adapter preserves repeated values separately and uses the first outer packet fields for the main addresses and protocol. It does not assign embedded TCP ports to an outer ICMP event.
+
+The adapter also avoids interpreting a directional prefix as a firewall verdict. INBOUND or OUTBOUND describes direction and does not prove allow or deny. Unknown action remains unknown. This is an example of improving useful normalization while keeping source semantics conservative, rather than increasing a coverage number through unsupported assumptions.
+
+10. COMMON EVENT REPRESENTATION
+
+The normalized representation is the versioned LOGFLUX event schema. It includes source and destination addresses, ports, protocol, action, severity, time, time basis, event category, device context and quality information. It also retains unmapped attributes and provenance. This makes consistent queries possible while preserving the source details that may matter later.
+
+The schema is OCSF-inspired, not a claim of full OCSF conformance. An ECS export adapter provides a conservative field projection and includes the complete normalized event in a LOGFLUX extension. Full conformance would require choosing a specific standard version, mapping required classes and categories, validating mandatory attributes and testing representative event families against that standard. That work is a future acceptance milestone rather than a label applied prematurely.
+
+Typed normalization checks addresses, port ranges, action values and timestamp representations. A missing or invalid field does not become an invented value. Quality issues are retained, and partially normalized events are distinguished from fully normalized ones. A record can therefore remain useful for investigation without concealing the fact that part of its interpretation needs review.
+
+11. TIMESTAMP MEANING
+
+Time is essential for correlation, but timestamp fields often carry hidden assumptions. A source may report local time without a zone, epoch seconds, milliseconds or a higher precision integer. LOGFLUX distinguishes a usable source timestamp from receipt time. When the source time cannot be safely interpreted, the original value remains available and the normalized event records that receipt time was used.
+
+The FortiGate improvement recognizes documented event-time precision variants and derives an explicit UTC value while retaining the original integer. Epoch-unit information also participates in the format fingerprint. A change from a seconds representation to a nanoseconds representation can therefore trigger review even when the field names remain identical. The derived Python timestamp has microsecond precision; the raw integer retains the original finer precision for later inspection.
+
+This feature addresses a real category of schema drift, but the demonstration fixtures are constructed examples based on documented representations. They are not a captured firmware upgrade on the team's device. The distinction matters because a format example establishes what can occur, while a deployment-specific upgrade claim requires a captured before-and-after record from that actual environment.
+
+12. UNKNOWN-FORMAT DISCOVERY
+
+Unfamiliar records enter a discovery workflow. Structural fingerprints identify recurring key sets or token patterns, and Drain3 supports template discovery. Deterministic aliases provide an initial mapping where field names are recognizable. The application groups relevant samples into a candidate that a reviewer can inspect rather than requiring immediate development of a new standalone parser.
+
+Discovery is not automatic understanding. Two fields can both contain valid IP addresses while representing opposite roles. A template can identify repeated structure without explaining whether an action means successful access, blocked traffic or simply an observation. LOGFLUX therefore keeps proposed mappings separate from approved mappings and exposes the source samples used during review.
+
+The intended reduction in effort comes from reusing extraction and validation machinery. A reviewer can often connect existing attributes to common fields without writing application code, rebuilding the service or restarting the collector. For truly novel binary structures or ambiguous protocols, a trusted adapter extension remains necessary. The framework makes that limitation visible instead of claiming that any byte sequence can be correctly understood by a language model.
+
+13. LOCAL AI ASSISTANCE
+
+The optional model is Qwen3 0.6B, used for field-mapping proposals. The local adapter supports an Ollama endpoint or a llama.cpp-compatible local service. Model output is treated as untrusted data, constrained to the available fields and checked before it becomes a candidate mapping. The model cannot approve its own proposal or deploy a parser into the active registry.
+
+Manual and deterministic review work without the model. This keeps the basic application usable on machines with limited resources or in environments where model weights have not been staged. There is no required cloud model service and no automatic cloud fallback. An air-gapped installation can transfer the approved runtime and model files separately when AI assistance is desired.
+
+The current application does not contain a trained intrusion classifier, Graph ML model, SHAP explanation pipeline or wallet-clustering system. Its detection signals use deterministic rules. Its Fracture Index is an explicitly uncalibrated activity heuristic. Our AI claim is therefore specific: local assistance can reduce mapping effort under human control. Analytics-ready data is an output of preprocessing, not evidence that every possible downstream machine-learning capability is already implemented.
+
+14. SEMANTIC VALIDATION
+
+A proposed mapping is evaluated against retained examples before approval. The reviewer can state expected normalized values for a particular event, such as the correct source address or timestamp. These assertions help catch mappings that pass type checks but reverse field meaning. The validation report brings together sample replay, sandbox execution and mutation checks so that the approval decision has visible evidence.
+
+A passing test does not remove the need for judgment. A small sample may omit rare event variants, and an expected value supplied incorrectly by a reviewer can create false confidence. LOGFLUX therefore records the mapping, report and named approval as part of the parser's lifecycle. Later corrections are new versions, not silent edits to an already approved interpretation.
+
+15. SIGNED PARSER LIFECYCLE
+
+Approved parsers are versioned artifacts. Their bundles include the field mapping, WebAssembly binary, schema identity, test vectors, supporting metadata and an Ed25519 signature. A trusted-key policy controls which exported bundles can be imported. Imported bundles are staged rather than automatically activating themselves. This supports controlled transfer between installations, including environments with no internet connection.
+
+Versioning makes change accountable. The operator can introduce a new candidate, validate it, approve it and activate the new version while preserving the earlier bundle. Rollback restores an earlier trusted interpretation without rewriting the original messages. The event's provenance records which parser and schema were used for each normalized revision.
+
+A signature proves that a bundle matches the bytes signed by a trusted key. It does not prove that its mapping is correct or that its signer made a good decision. That distinction explains why the lifecycle combines signatures with sample validation and human approval. The signature protects integrity and origin; the review process addresses meaning and deployment policy.
+
+16. DRIFT DETECTION AND ASSISTED RECOVERY
+
+The framework maintains a source baseline of observed, accepted fingerprints. When a later record has an unfamiliar shape or a recognized timestamp-unit change, it can be quarantined for review. The raw message remains available, but the system avoids silently applying a broad adapter as though nothing changed. The operator sees that a new interpretation needs attention.
+
+After a revised mapping is validated and approved, replay creates a new normalized revision for retained events. The original revision remains in the history, and the raw hash stays unchanged. This allows the investigator to distinguish what the system understood at receipt from what it understood after correction. It also supports retrospective queries without pretending that the corrected interpretation always existed.
+
+We describe this as assisted self-healing. It is a controlled recovery loop involving discovery, testing, approval and replay, not autonomous production changes by a model. The end-to-end drift demonstration verifies the transition from normalized baseline to quarantined variant to approved revision, then checks the original evidence. The demonstration is supported by an automated test and a recording of the application workflow.
+
+17. CRYPTOGRAPHIC EVIDENCE CHECKPOINTS
+
+LOGFLUX groups event manifests into Merkle trees. A manifest links an event identity and its evidence metadata to a leaf, and domain-separated hashing distinguishes leaf and parent construction. An inclusion proof permits an event to be checked against a batch root without requiring the entire batch to be transferred. Ordered checkpoints link roots into a hash-chained history.
+
+Ed25519 witness signatures endorse those checkpoints. The default local configuration uses three witnesses with a two-of-three threshold. The implementation checks signatures against pinned keys and rejects conflicting or out-of-order history. These operations support tamper-evident evidence verification and demonstrate a permissioned checkpoint mechanism.
+
+This is not a claim of Byzantine consensus, immutable hardware storage or automatic regulatory compliance. A privileged administrator controlling the storage and all keys remains a serious trust concern. The cryptographic design provides verifiable relationships between records and signed checkpoints; operational custody requires independently protected keys, trusted public-key distribution, backup policy and an appropriate deployment arrangement.
+
+18. NETWORK WITNESS EXTENSION
+
+Witness signing has been separated into services with a defined authenticated API. Each service maintains its own key and checkpoint database. The coordinator sends requests concurrently, verifies the pinned public key, catches up ordered history where necessary and accepts a checkpoint only when the required number of valid signatures is available. Remote binding requires TLS, while loopback HTTP is reserved for local testing.
+
+A three-process test verifies normal signing, operation with one witness unavailable, rejection when only one remains, restart and catch-up, and refusal to sign a conflicting checkpoint. These processes use separate directories and key material, but they were tested on one physical computer. They therefore do not establish independent administrative custody or protection against loss of that computer.
+
+An additional offline command verifies a Merkle proof using any one independently obtained witness public key. It states clearly that one signature is an endorsement by that key, not verification of a two-of-three quorum. This helps an investigator examine evidence without trusting the coordinator's presentation of every other witness, while preserving the distinction between individual endorsement and quorum agreement.
+
+19. INVESTIGATION WORKSPACE
+
+The investigation interface links normalized observations to their original evidence. Users can select an observed address, inspect its related events, follow a receipt-time timeline and save an evidence case. Rule signals can guide attention, but the interface does not infer identity, attribution or malicious intent merely from an IP relationship. A shared address is an observation that may need further investigation.
+
+The graph is generated from stored source-destination pairs. It is not a separately trained graph model, a wallet ownership model or a claim that all connected nodes belong to the same actor. Some views are intentionally bounded to recent matching events or alerts, and their limits are labeled. These bounds keep the prototype responsive while making the scope of a visualization understandable.
+
+An event inspector provides raw, normalized, revision, provenance and proof information. This is where the framework's two purposes meet: common fields make analysis easier, and preserved evidence makes the analysis reviewable. A saved case can refer back to the event identities rather than relying only on screenshots or copied text that may lose context.
+
+20. INTEGRATION WITH DOWNSTREAM SYSTEMS
+
+LOGFLUX exports JSONL, CSV and a conservative ECS projection. An authenticated API exposes events, raw bytes, provenance, parser workflow and metrics. A durable outbox sends normalized revisions to configured HTTP destinations with retry and stable delivery identifiers. A receiving system must handle duplicate delivery because the contract is at least once.
+
+The native Elasticsearch Bulk connector uses the actual action-and-document NDJSON format. It checks item-level results even when the HTTP request returns success, and uses a stable event-and-revision document ID so a retry does not create a second logical document. Authentication can be supplied through a private API-key file, and authenticated delivery requires HTTPS. The complete normalized event remains available under the LOGFLUX extension.
+
+The connector does not replace raw-evidence backup, and generic HTTP support should not be represented as native Splunk HEC, Kafka or S3 integration. Each target has its own protocol and acceptance requirements. The repository distinguishes the implemented output protocol, unit-level failure checks and live integration evidence so evaluators can see exactly what has been exercised.
+
+21. AIR-GAPPED OPERATION
+
+The core application serves its interface assets locally and does not depend on a frontend CDN or cloud account. Fonts are bundled with the application. Collection, deterministic parsing, review, evidence verification and local exports can operate within an isolated network. The optional language model is a local service whose runtime and weights must be staged separately.
+
+The offline preparation process collects the Python dependencies for the target operating system, CPU architecture and Python version. A manifest supports integrity checking before transfer. On the isolated machine, installation can use the staged wheels without querying a package index. Container images likewise need to be built or acquired while connected and transferred with an approved image-export process.
+
+Air-gap compatibility is different from an assertion that every deployment has already been tested without external connectivity. A physically disconnected acceptance exercise must use the actual target environment, staged dependencies, device traffic and trusted keys. Our documentation provides that operational boundary instead of assuming that a local web interface alone proves an air-gapped deployment.
+
+22. CONTAINER PACKAGING
+
+The Docker image provides a reproducible application environment. The service runs as a non-root user, stores persistent state in a dedicated writable volume and can use a read-only root filesystem with a temporary writable area for runtime needs. Unnecessary Linux capabilities are dropped. The dashboard is published on loopback by default, while device-facing collector ports are configured separately.
+
+The local acceptance script verifies application health, authenticated ingestion, exact raw retrieval, TCP and UDP receipt, evidence sealing and proof verification after a container restart. Restart persistence matters because a demo that works only until the process exits is not a credible evidence-preserving system. The resulting report identifies the scope as a local container trial, not a physical-firewall test or an enterprise deployment.
+
+A GitHub Actions workflow repeats the Docker acceptance process and uploads its report. CI status is linked to the actual workflow result rather than represented by a permanently green graphic. A successful image build, a local container pass and a passing hosted CI run are different pieces of evidence and are reported separately.
+
+23. REAL DATASET EVALUATION
+
+The evaluation tools download complete selected corpora from Loghub, Honeynet archives and the SecRepo MACCDC 2012 connection-log deposit. The downloader records source URLs and hashes, rejects unsafe archive paths and does not execute archive contents. Downloaded data stays outside the committed source tree. If a source is unavailable, the report records that failure rather than substituting a small excerpt while calling it the full corpus.
+
+The coverage command processes every selected log record through built-in decoding, mapping and normalization. It reports normalized, partial, discovery-eligible and failed counts separately, along with physical-line and metadata-line counts. This is a fresh-registry dry-run: it excludes learned plugins, source drift history, persistent storage and model calls. It therefore measures initial adapter coverage, not semantic ground-truth accuracy or full live-pipeline acceptance.
+
+24. PERFORMANCE MEASUREMENT
+
+The earlier benchmark measured sequential calls to the local Store on a small synthetic workload. It included durable raw and revision writes but excluded network transport, a concurrent dashboard and model activity. That figure is useful as a component baseline, but it cannot establish live network capacity or justify multiplication by a hypothetical worker count.
+
+The sustained benchmark starts the actual collector in an isolated application process and drives real loopback sockets from multiple connections. It offers increasing target rates for a fixed duration and reports the actual send rate, durable receipts during the window, receipts after a bounded drain and any uncertain final send. Backpressure can prevent the requested rate from being achieved; an offered rate is never relabeled as measured throughput.
+
+Daily event figures, where shown, are arithmetic projections from a short measured window and are explicitly labeled as such. The project does not claim a measured 24-hour run or billion-event capacity. Results collected while other tasks use the same computer are also not an isolated hardware certification. The purpose is to reveal bottlenecks and queue behavior, then provide a repeatable method for a dedicated target-machine trial.
+
+25. DISTRIBUTED PROCESSING EXPERIMENT
+
+A separate experiment explores the next storage architecture: a partitioned Redpanda broker, independent Python workers and ClickHouse. Four partitions provide a concrete basis for one-, two- and four-worker runs. Raw bytes and their hashes travel with the event envelope. Each worker reads assigned partitions, normalizes supported records, constructs batch evidence and writes columnar rows before advancing its durable local offset.
+
+Stable event identities support logical deduplication when a write is retried. Each worker produces batch Merkle roots, which are aggregated into a higher-level tree. Verification checks raw hashes, normalized hashes and inclusion proofs. The aggregate root can be submitted to the witness experiment. This creates a testable path for studying parallel processing without claiming that the existing dashboard has already migrated to distributed storage.
+
+The experiment has static partition ownership, one broker and one ClickHouse node. It does not provide automatic rebalance, replicated high availability, WORM object storage, a shared production parser registry or integration with the dashboard's queries. Measured results must be retained even when adding workers fails to improve throughput; a real experiment is more valuable than a linear scaling assumption.
+
+26. REQUIREMENT-BY-REQUIREMENT ALIGNMENT
+
+Requirement (a), preserving complete raw event data, is addressed by byte storage, raw downloads, hashes and append-only records after acceptance. Requirement (b), source-specific attribute extraction, is addressed by structural decoders and explicit device-format adapters. Requirement (c), a common taxonomy, is addressed by typed LOGFLUX fields and quality metadata, with full OCSF conformance clearly left as future work. Requirement (d), traceability, is addressed by event identity, raw references, parser and schema versions, revisions, Merkle paths and witness signatures.
+
+Requirement (e), plug-and-play onboarding, is demonstrated by the candidate-to-approved-parser workflow without restarting the collector. Requirement (f), unified visibility, is demonstrated by the seven connected workspaces and source, status and mode filters. Requirement (g), SIEM and lake integration, is addressed through exports, the durable outbox and native Elasticsearch Bulk protocol, while additional native destinations remain extensions. Requirement (h), AI/ML readiness, is addressed by typed data, preserved provenance and optional local mapping assistance; a trained attack model is not claimed.
+
+Requirement (i), reduced parser development effort, is demonstrated through declarative mapping, reusable validation and approved replay; a numerical time-saving claim requires a controlled user study. Requirement (j), air-gapped deployment, is supported by local assets, staged dependencies and local model operation. Requirement (k), container packaging, is demonstrated by the non-root image and restart acceptance checks. The README links each requirement to a short API, CLI or UI verification step rather than asking evaluators to trust a feature list.
+
+27. A PRACTICAL OPERATOR JOURNEY
+
+An operator begins by registering a source and configuring the device's logging destination. The first received event is inspected to confirm source attribution, transport and original bytes. For a known format, normalized addresses, ports and actions become visible immediately. For an unfamiliar format, the record remains available in the review queue, where the operator can examine the source fields instead of losing the event while a parser is developed elsewhere.
+
+The operator then selects meaningful mappings and adds sample expectations. A validation failure provides a concrete reason to revise the mapping. A passing report enables named approval, after which the signed version can replay retained events. The operator checks the new revision, compares its raw hash with the original, verifies the evidence proof and uses the normalized fields in an investigation. This journey can be shown live in a short demo while the longer security and performance reports remain available for detailed evaluation.
+
+28. SECURITY AND TRUST BOUNDARIES
+
+The design assumes that incoming records and model proposals may be malformed or misleading. Frame limits, safe structural decoding, restricted projections and explicit review reduce several risks, but the application is not claimed to be invulnerable. An authenticated API protects administrative operations, private keys and tokens remain outside the repository, and remote witness or authenticated output connections require appropriate transport protection.
+
+Operational controls remain necessary around the prototype. A production deployment should define separate reviewer and administrator roles, key rotation, retention and deletion policy, backups, secure time sources and resource monitoring. The current bearer-token model is not a complete enterprise identity and authorization system. Similarly, database append-only triggers do not provide hardware-enforced WORM storage against an administrator who controls the database files. These boundaries guide the next engineering work and help prevent cryptographic features from being mistaken for a complete organizational security policy.
+
+29. EXPECTED BENEFITS AND HOW TO MEASURE THEM
+
+LOGFLUX is intended to make onboarding and correction more repeatable, reduce the number of handwritten parsers needed for familiar structures, and improve confidence in the relationship between an event and its source evidence. Its value should be measured through practical tasks: the time required to onboard an unseen format, the percentage of records correctly normalized, the number of semantic mapping errors caught before approval and the time required to trace an alert back to raw bytes.
+
+A pilot should compare the same sources and tasks before and after adoption. Reviewers should use representative records rather than only examples chosen because they already work. Failures, ambiguous fields and operator corrections should be retained in the results. Coverage improvements must be distinguished from detection accuracy, and analyst convenience must be distinguished from proven incident-response outcomes. This evaluation method allows the project to demonstrate useful benefits without inventing a percentage reduction in effort or a security accuracy score.
+
+30. IMPLEMENTATION AND DEPLOYMENT ROADMAP
+
+The first deployment phase is a controlled single-node pilot with a small set of perimeter sources. It establishes reliable collection, explicit source registration, byte-preservation checks, approved parser versions and a documented recovery procedure. The second phase broadens device and firmware coverage using captured fixtures, semantic regression tests and real user onboarding exercises. Standard conformance work should select a defined OCSF target and validate supported event classes systematically.
+
+The next infrastructure phase integrates a durable partitioned broker, replicated storage and shared parser governance, using the separate multi-worker experiment as a starting point rather than a completed migration. Independent witness deployment should place keys and services under different administrative control and test outages, recovery and trust changes. Longer capacity trials must measure storage growth, query latency, backpressure and operational failure modes on the intended hardware. Each phase ends with evidence-based acceptance criteria so that the roadmap can be evaluated as engineering work, not as an extrapolated throughput promise.
+
+31. SUBMISSION AND REPRODUCIBILITY
+
+The submission includes source code, installation instructions, an architecture document, a compact presentation, a demo script, screenshots and machine-readable verification reports. The README explains the purpose of each workspace and connects claims to reproducible commands. A teammate can clone the repository, create a fresh installation and generate labeled demonstration traffic without receiving someone else's operational database or private signing keys.
+
+Dataset manifests identify downloaded sources and content hashes. Test reports identify the checks that passed, while benchmark reports state the workload, duration, transport and measurement boundary. Screenshots are illustrations of the running application, not replacements for those reports. Team members should be able to explain the design decisions and reproduce their own contributions. The registered roster and genuine commit history are retained; repository popularity statistics are not presented as evidence of technical quality.
+
+32. INTENDED OUTCOME
+
+The intended outcome is an extensible preprocessing foundation that makes perimeter telemetry easier to use without sacrificing the ability to examine its origin. Its most defensible contribution is the controlled path from an unfamiliar message to a tested, signed and sandboxed interpretation, combined with preserved raw evidence and reviewable provenance. The current prototype demonstrates that workflow and exposes the next gaps through real tests.
+
+For NTRO's problem statement, LOGFLUX offers a practical starting point for consistent analytics across diverse network sources, local operation in restricted environments and accountable parser evolution. The proposal seeks to grow through measured adapter coverage, deployment validation and distributed-system engineering. Success means that an operator can explain what was received, how it was interpreted, who approved that interpretation and how an investigator can verify the supporting evidence.

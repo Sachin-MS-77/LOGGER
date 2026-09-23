@@ -1,0 +1,9 @@
+{
+  "fixture": "constructed documented FortiGate epoch-unit variation",
+  "old_status": "normalized",
+  "changed_status": "drifted",
+  "replayed_status": "normalized",
+  "revision": 2,
+  "raw_hash_unchanged": true,
+  "proof_verified": true
+}

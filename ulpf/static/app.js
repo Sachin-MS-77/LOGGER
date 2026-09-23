@@ -417,7 +417,7 @@ async function evidencePage() {
     ) +
     `<div class="metrics">${metric("Original evidence", bytes(S.stats.raw_bytes), "", `${fmt(S.stats.total)} events retained`, "database")}${metric("Events sealed", fmt(S.stats.sealed), "", `${fmt(S.stats.total - S.stats.sealed)} awaiting a batch`, "shield")}${metric("Recent checkpoints", fmt(anchored), "", `${batches.length} batches shown · quorum signed`, "lock")}${metric("Witness quorum", "2 / 3", "", `Local permissioned validators`, "network")}</div>` +
     notice(
-      "This deployment uses three local witnesses on one host. Signatures detect inconsistent evidence; independently administered machines are required for independent custody.",
+      S.system.ledger_mode,
       "amber",
     ) +
     panel(
@@ -583,8 +583,8 @@ async function systemPage() {
         .join(
           "",
         )}<div class="mt">${notice(`${S.stats.metrics.receiver_errors} receiver errors · ${S.stats.metrics.rejected} rejected oversized/empty events. ${esc(S.stats.metrics.last_receiver_error || "No receiver error recorded.")}`)}</div></div>`,
-    )}${panel("Permissioned witnesses", `<div class="panel-body">${S.system.witnesses.map((w) => `<div class="witness"><div><strong>${esc(w.name)}</strong><small>${esc(w.key_id)}</small></div><div class="flex">${badge(w.enabled ? "available" : "offline", w.enabled ? "green" : "amber")}${button(w.enabled ? "Pause" : "Resume", "witness", "", "small", `data-name="${w.name}" data-enabled="${!w.enabled}"`)}</div></div>`).join("")}<p class="field-help mt">Pause a witness to test quorum and ordered synchronization. All three currently share this host.</p></div>`)}</div>` +
-    `<div class="section-gap">${panel("SIEM & data lake outputs", sinks.length ? `<div class="table-scroll"><table><thead><tr><th>Output</th><th>Endpoint</th><th>Delivered</th><th>Pending</th><th>Status</th><th></th></tr></thead><tbody>${sinks.map((s) => `<tr><td>${esc(s.name)}</td><td class="mono">${esc(short(s.url, 45))}</td><td>${s.delivered}</td><td>${s.pending}</td><td>${badge(s.enabled ? "enabled" : "paused", s.enabled ? "green" : "outline")}</td><td>${button(s.enabled ? "Pause" : "Resume", "sink-toggle", "", "small", `data-id="${s.id}" data-enabled="${!s.enabled}"`)}</td></tr>`).join("")}</tbody></table></div>` : empty("No output endpoint configured", "Add a local HTTP collector for ongoing delivery, or export JSONL, ECS-mapped JSONL, and CSV files.", button("Add output", "add-sink", "plus", "small")), '<span class="tiny muted">Durable outbox · retries · idempotency keys</span>')}</div>` +
+    )}${panel("Permissioned witnesses", `<div class="panel-body">${S.system.witnesses.map((w) => `<div class="witness"><div><strong>${esc(w.name)}</strong><small>${esc(w.key_id)}</small></div><div class="flex">${badge(S.system.remote_witnesses ? "configured" : (w.enabled ? "available" : "offline"), "outline")}${S.system.remote_witnesses ? "" : button(w.enabled ? "Pause" : "Resume", "witness", "", "small", `data-name="${w.name}" data-enabled="${!w.enabled}"`)}</div></div>`).join("")}<p class="field-help mt">${esc(S.system.ledger_mode)}</p></div>`)}</div>` +
+    `<div class="section-gap">${panel("SIEM & data lake outputs", sinks.length ? `<div class="table-scroll"><table><thead><tr><th>Output</th><th>Endpoint</th><th>Delivered</th><th>Pending</th><th>Status</th><th></th></tr></thead><tbody>${sinks.map((s) => `<tr><td>${esc(s.name)}<span class="source-sub">${esc(s.kind || "http")}</span></td><td class="mono">${esc(short(s.url, 45))}</td><td>${s.delivered}</td><td>${s.pending}</td><td>${badge(s.enabled ? "enabled" : "paused", s.enabled ? "green" : "outline")}</td><td>${button(s.enabled ? "Pause" : "Resume", "sink-toggle", "", "small", `data-id="${s.id}" data-enabled="${!s.enabled}"`)}</td></tr>`).join("")}</tbody></table></div>` : empty("No output endpoint configured", "Add a local HTTP collector for ongoing delivery, or export JSONL, ECS-mapped JSONL, and CSV files.", button("Add output", "add-sink", "plus", "small")), '<span class="tiny muted">Durable outbox · retries · idempotency keys</span>')}</div>` +
     (outbox.some((o) => o.error)
       ? `<div class="section-gap">${notice("<strong>Delivery requires attention.</strong> " + esc(outbox.find((o) => o.error).error), "amber")}</div>`
       : "") +
@@ -871,10 +871,10 @@ async function action(el) {
       return;
     }
     case "demo": {
-      await post("/demo/start", { count: 120 });
+      await post("/demo/start", { count: 2187 });
       closeModal();
       toast(
-        "Synthetic replay started. Every generated event is labeled replay.",
+        "Synthetic replay started (2,187 events). Every generated event is labeled replay.",
       );
       await refresh(true);
       return;
@@ -1115,7 +1115,7 @@ async function action(el) {
       modal(
         "Add an output endpoint",
         "New normalized revisions will enter a durable delivery queue.",
-        `<div class="field"><label for="sink-name">Output name</label><input id="sink-name" placeholder="Local SIEM collector"></div><div class="field"><label for="sink-url">HTTP(S) endpoint</label><input id="sink-url" placeholder="http://127.0.0.1:9000/events"></div>${notice("The endpoint must accept POST requests containing an LOGFLUX event envelope. The delivery ID is sent as an Idempotency-Key. Delivery retries are at least once; the receiver should deduplicate.")}`,
+        `<div class="field"><label for="sink-kind">Connector</label><select id="sink-kind"><option value="http">Generic HTTP webhook</option><option value="elasticsearch">Elasticsearch Bulk API</option></select></div><div class="field"><label for="sink-index">Elasticsearch index</label><input id="sink-index" value="logflux-events"></div><div class="field"><label for="sink-name">Output name</label><input id="sink-name" placeholder="Local SIEM collector"></div><div class="field"><label for="sink-url">HTTP(S) endpoint</label><input id="sink-url" placeholder="http://127.0.0.1:9000/events"></div>${notice("For Elasticsearch, enter the server base URL; LOGFLUX uses its Bulk API with stable event/revision IDs and checks item errors. Generic HTTP expects a LOGFLUX JSON envelope and uses Idempotency-Key. Retries are at least once.")}`,
         button("Cancel", "close") +
           button("Add output", "save-sink", "plus", "primary"),
       );
@@ -1124,6 +1124,8 @@ async function action(el) {
       await post("/sinks", {
         name: $("#sink-name").value,
         url: $("#sink-url").value,
+        kind: $("#sink-kind").value,
+        index_name: $("#sink-index").value,
       });
       closeModal();
       toast("Output registered. New normalized events will be queued.");

@@ -14,7 +14,7 @@ ALIASES = {
     "source_port": ["srcport", "src_port", "spt", "sourcePort", "source_port"],
     "destination_port": ["dstport", "dest_port", "dpt", "destinationPort", "destination_port"],
     "protocol": ["proto", "protocol", "network.transport"], "action": ["action", "act", "decision"],
-    "time": ["timestamp", "time", "@timestamp", "rt"], "severity": ["level", "severity"],
+    "time": ["eventtime_utc", "timestamp", "time", "@timestamp", "rt"], "severity": ["level", "severity"],
     "message": ["msg", "message", "alert.signature"], "device": ["devname", "hostname", "device"],
     "event_type": ["event_type", "type"],
 }
@@ -146,6 +146,15 @@ def decode(raw):
                 else: out[path] = value
             return out
         attrs, fmt = walk(root), "xml"
+    elif all(re.search(r'(?:^|\s)'+key+r'=',body) for key in ('IN','SRC','DST','PROTO')):
+        # iptables ICMP records may include a quoted inner packet with repeated
+        # SRC/DST/LEN keys. First occurrences describe the outer packet; retain
+        # every later value separately rather than overwriting or rejecting it.
+        attrs={"message":body};occurrences={}
+        for match in re.finditer(r'(?:^|\s)([A-Z][A-Z0-9_]*)=([^\s]*)',body):
+            key,value=match.groups();occurrences[key]=occurrences.get(key,0)+1
+            attrs[key if occurrences[key]==1 else f"repeated.{key}.{occurrences[key]}"]=value
+        fmt,vendor="iptables","iptables"
     elif "%ASA-" in body:
         attrs, fmt, vendor = {"message": body}, "cisco-asa", "cisco-asa"
         m = re.search(r'%ASA-(\d)-(\d+):\s*(.*)', body)
@@ -176,6 +185,15 @@ def decode(raw):
                     if len(cols)>18 and attrs["protocol"] in ("tcp","udp"): attrs.update({"srcport":cols[17],"dstport":cols[18]})
                 else: raise ValueError("unsupported pfSense filterlog layout")
                 fmt, vendor = "pfsense", "pfsense"
+    if vendor == "fortigate" and str(attrs.get("eventtime", "")).isdigit():
+        # Fortinet documents epoch seconds and nanoseconds. Preserve the original
+        # integer; the derived ISO value has Python's microsecond precision.
+        from datetime import datetime, timezone, timedelta
+        value=str(attrs["eventtime"])
+        divisor={10:1,13:1000,16:1000000,19:1000000000}.get(len(value))
+        if divisor:
+            seconds,remainder=divmod(int(value),divisor)
+            attrs["eventtime_utc"]=(datetime.fromtimestamp(seconds,timezone.utc)+timedelta(microseconds=remainder*1000000//divisor)).isoformat()
     if len(attrs)>MAX_FIELDS: raise ValueError("field limit exceeded")
     attrs.update(meta)
     # A key-set fingerprint detects changes even if a parser still accepts syntax.
@@ -185,13 +203,24 @@ def decode(raw):
         attrs.update({f"token_{i}": token for i, token in enumerate(body.split()[:MAX_FIELDS-len(meta)])})
     shape = sorted(k for k in attrs if not k.startswith("syslog."))
     template = re.sub(r'\b(?:\d{1,3}\.){3}\d{1,3}\b|\b\d+\b', "<*>", body)[:300] if fmt == "text" else ""
-    fingerprint = digest(canonical({"format":fmt,"keys":shape,"template":template}))[:24]
+    # Retain historical fingerprints for all existing formats. FortiGate epoch
+    # units become a structural discriminator only when eventtime is present.
+    fingerprint_shape = {"format":fmt,"keys":shape,"template":template}
+    if vendor == "fortigate" and str(attrs.get("eventtime", "")).isdigit():
+        digits=len(str(attrs["eventtime"]))
+        fingerprint_shape["eventtime_unit"] = {10:"seconds",13:"milliseconds",16:"microseconds",19:"nanoseconds"}.get(digits,"unsupported")
+    fingerprint = digest(canonical(fingerprint_shape))[:24]
     return {"format":fmt,"vendor":vendor,"attributes":attrs,"fingerprint":fingerprint,"body":body,"template":template}
 
 def built_in_mapping(parsed):
     attrs, vendor = parsed["attributes"], parsed["vendor"]
     if vendor == "unknown": return None
     mapping = suggest_mapping(attrs)
+    if vendor == "iptables":
+        mapping.update({target:key for target,key in {"source_ip":"SRC","destination_ip":"DST","source_port":"SPT","destination_port":"DPT","protocol":"PROTO"}.items() if key in attrs})
+        if str(attrs.get("PROTO", "")).lower() not in ("tcp", "udp"):
+            mapping.pop("source_port", None);mapping.pop("destination_port", None)
+        # INBOUND/OUTBOUND identifies direction, never allow/deny semantics.
     if vendor == "suricata":
         mapping.update({"source_ip":"src_ip", "destination_ip":"dest_ip", "time":"timestamp"})
         if "alert.action" in attrs: mapping["action"] = "alert.action"

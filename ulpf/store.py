@@ -49,6 +49,7 @@ class Store:
         CREATE TABLE IF NOT EXISTS alerts(id TEXT PRIMARY KEY, event_id TEXT REFERENCES raw_events(id), rule TEXT, severity TEXT, title TEXT, created_at TEXT);
         CREATE TABLE IF NOT EXISTS cases(id TEXT PRIMARY KEY, title TEXT, event_ids TEXT, notes TEXT, created_at TEXT);
         CREATE TABLE IF NOT EXISTS sinks(id TEXT PRIMARY KEY, name TEXT, url TEXT, enabled INTEGER, created_at TEXT);
+        CREATE TABLE IF NOT EXISTS sink_options(sink_id TEXT PRIMARY KEY REFERENCES sinks(id), kind TEXT NOT NULL, index_name TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS outbox(id TEXT PRIMARY KEY, sink_id TEXT REFERENCES sinks(id), event_id TEXT, revision INTEGER, payload TEXT, status TEXT, attempts INTEGER DEFAULT 0, error TEXT, next_attempt REAL DEFAULT 0);
         CREATE INDEX IF NOT EXISTS ix_outbox_status ON outbox(status,next_attempt);
         CREATE TRIGGER IF NOT EXISTS immutable_raw_update BEFORE UPDATE ON raw_events BEGIN SELECT RAISE(ABORT,'raw evidence is immutable'); END;
@@ -58,7 +59,15 @@ class Store:
         ''')
         self.db.commit()
         self.signer = SigningKey(self.directory/"keys"/"registry.key")
-        self.ledger = WitnessLedger(self.directory/"keys")
+        if os.getenv('LOGFLUX_WITNESS_CONFIG'):
+            from .remote_ledger import RemoteLedger
+            self.ledger=RemoteLedger(os.environ['LOGFLUX_WITNESS_CONFIG'])
+            for batch in self.rows('SELECT anchoring FROM batches'):
+                if any(v['public_key'] not in self.ledger.trusted for v in json.loads(batch['anchoring']).get('votes',[])):
+                    self.db.close()
+                    raise ValueError('existing evidence uses different witness keys; use a separate data directory, do not replace historical trust')
+        else:
+            self.ledger = WitnessLedger(self.directory/"keys")
         self.sandbox = Sandbox()
         config = TemplateMinerConfig(); config.drain_max_clusters = 1000
         self.miner = TemplateMiner(config=config)
@@ -396,7 +405,7 @@ class Store:
         return {"event_id":eid,"sealed":True,"raw_hash_valid":raw_ok,"manifest_valid":manifest_ok,"merkle_valid":merkle_ok,
                 "ledger_valid":quorum_ok,"chain_valid":chain_ok,"verified":raw_ok and manifest_ok and merkle_ok and quorum_ok,
                 "manifest":manifest,"leaf":leaf_hash(manifest),"proof":proof,"root":member["root"],"checkpoint":checkpoint,"anchor":anchor,
-                "trusted_witness_keys":self.ledger.trusted,"trust_note":"Local witnesses share one host. Verification detects inconsistency; it does not prove source truth or independent custody."}
+                "trusted_witness_keys":self.ledger.trusted,"trust_note":self.ledger.trust_note}
 
     def detect(self, eid, n):
         alerts = []

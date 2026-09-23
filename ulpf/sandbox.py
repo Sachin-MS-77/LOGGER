@@ -22,6 +22,8 @@ class Sandbox:
         return bytes(wasmtime.wat2wasm(wat))
     def project(self, binary, keys, attributes):
         import hashlib
+        if not isinstance(binary, (bytes, bytearray)) or len(binary)>65536:
+            raise ValueError("plugin binary size exceeds 64 KiB compile limit")
         h = hashlib.sha256(binary).hexdigest()
         module = self.cache.get(h)
         if module is None:
@@ -35,6 +37,10 @@ class Sandbox:
         instance = wasmtime.Instance(store, module, [])
         selector = instance.exports(store).get("select")
         if selector is None: raise ValueError("plugin lacks select export")
+        if not isinstance(selector, wasmtime.Func): raise ValueError("invalid select signature")
+        signature = selector.type(store)
+        if [str(x) for x in signature.params] != ["i32"] or [str(x) for x in signature.results] != ["i32"]:
+            raise ValueError("select signature must be (i32) -> i32")
         mapping = {}
         for i, target in enumerate(FIELDS):
             position = selector(store, i)

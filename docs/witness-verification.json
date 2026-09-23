@@ -1,0 +1,36 @@
+{
+  "main_store_remote_proof_verified": true,
+  "aggregate_root": "32000e1502e0e3f2e8bddfa4b19edc642534f0fe15be92c29e1172e9bff0f2c5",
+  "two_of_three_available": true,
+  "one_of_three_rejected": true,
+  "restart_catchup_votes": 3,
+  "conflicting_checkpoint_rejected": true,
+  "checkpoint": {
+    "sequence": 3,
+    "previous": "3cc088146e8dd94a740742dd12c3d5e646021d412158e7dccc893bbca10a9195",
+    "root": "32000e1502e0e3f2e8bddfa4b19edc642534f0fe15be92c29e1172e9bff0f2c5",
+    "event_count": 0,
+    "created_at": "2026-09-23T10:20:27.323+00:00"
+  },
+  "votes": [
+    {
+      "key_id": "0f95e75cf8364bae",
+      "public_key": "XXEmVPoMMtGslnJzEtQwlqBHEpslRbCXHoBV4XVwqxA=",
+      "signature": "qyxlPBwLjbeDLxLiIyOzoWqqal/ynT7pAI4LgcXLMpWpF4dgEu0M+wWY74eYG0+ktusOSV6B2AJ0iqk0pP07Dg==",
+      "witness": "witness-1"
+    },
+    {
+      "key_id": "2dd8363c50bf7c25",
+      "public_key": "5TW8gsbOKfBQ8d8dJaWBusnAcZ4qv52J4Hpx+9P+JnA=",
+      "signature": "re1orjta6hJQbvRqoSCkDVqX1TBRC1QA6dmVyB5xt7v7zsGpmdgUs8ZLnRJeDWplIX0XUOFz3tYsPpDgB4hTCw==",
+      "witness": "witness-2"
+    },
+    {
+      "key_id": "9ff87058245b4180",
+      "public_key": "K3KKwKfueB61OyjaOcomlO9gRLoctiLERRBjbmB99g8=",
+      "signature": "65lY1yeIJlFZej1gxEYEQnhZo2ml0iUAI8GGEUgqUcybKoMgfn7p7vi0rKhOrQxZ8bfVAOM1XGDlh1AzDh28BQ==",
+      "witness": "witness-3"
+    }
+  ],
+  "scope": "Three separate HTTP processes, separate databases/keys, same physical host; independent machine/administrator custody NOT verified."
+}

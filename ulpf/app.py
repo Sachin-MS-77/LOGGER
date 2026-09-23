@@ -12,6 +12,7 @@ import secrets
 import time
 import uuid
 from urllib.parse import urlparse
+from typing import Literal
 import httpx
 from fastapi import FastAPI, APIRouter, Request, Depends, HTTPException, Query
 from fastapi.responses import FileResponse, JSONResponse, Response
@@ -46,6 +47,8 @@ class CaseInput(BaseModel):
 class SinkInput(BaseModel):
     name: str=Field(min_length=1,max_length=100)
     url: str=Field(max_length=2000)
+    kind: Literal['http','elasticsearch']='http'
+    index_name: str='logflux-events'
 
 def create_app(data_dir=None, start_receivers=True):
     directory=Path(data_dir or os.getenv("LOGFLUX_DATA_DIR", os.getenv("AEGIS_DATA_DIR","data")))
@@ -125,7 +128,7 @@ def create_app(data_dir=None, start_receivers=True):
         return {"version":"1.0.0","schema":SCHEMA,"schema_hash":SCHEMA_HASH,"listeners":app.state.receivers.status,
                 "lab_listeners":app.state.lab_receivers.status,"demo":app.state.demo,"background_error":app.state.background_error,"registry_public_key":store().signer.public,
                 "witnesses":[{"name":w.name,"enabled":w.enabled,"key_id":w.key.id} for w in store().ledger.witnesses],
-                "ledger_mode":"2-of-3 signed checkpoints; local witnesses share a host", "storage":"SQLite WAL + FULL synchronous durability",
+                "ledger_mode":store().ledger.trust_note, "remote_witnesses":bool(os.getenv("LOGFLUX_WITNESS_CONFIG")), "storage":"SQLite WAL + FULL synchronous durability",
                 "limits":{"event_bytes":MAX_EVENT,"single_node":True},"offline_assets":True}
     @app.exception_handler(httpx.HTTPError)
     async def upstream_error(request,exc):
@@ -251,6 +254,7 @@ def create_app(data_dir=None, start_receivers=True):
     def audit(): return store().rows("SELECT * FROM audit ORDER BY seq DESC LIMIT 100")
     @api.post("/integrity/witness/{name}")
     def witness(name:str,body:dict):
+        if os.getenv('LOGFLUX_WITNESS_CONFIG'): raise ValueError('manage remote witness availability on the witness host')
         for w in store().ledger.witnesses:
             if w.name==name:
                 w.enabled=bool(body.get("enabled",True)); store().audit("witness.availability",{"name":name,"enabled":w.enabled}); return {"name":name,"enabled":w.enabled}
@@ -274,14 +278,17 @@ def create_app(data_dir=None, start_receivers=True):
         store().audit("case.created",{"case":cid,"events":body.event_ids})
         return {"id":cid}
     @api.get("/sinks")
-    def sinks(): return store().rows("SELECT s.*,(SELECT COUNT(*) FROM outbox o WHERE o.sink_id=s.id AND status='delivered') delivered,(SELECT COUNT(*) FROM outbox o WHERE o.sink_id=s.id AND status='pending') pending FROM sinks s")
+    def sinks(): return store().rows("SELECT s.*,COALESCE(c.kind,'http') kind,c.index_name,(SELECT COUNT(*) FROM outbox o WHERE o.sink_id=s.id AND status='delivered') delivered,(SELECT COUNT(*) FROM outbox o WHERE o.sink_id=s.id AND status='pending') pending FROM sinks s LEFT JOIN sink_options c ON c.sink_id=s.id")
     @api.post("/sinks")
     def add_sink(body:SinkInput):
+        from .outputs import validate_index
+        validate_index(body.index_name)
         parsed=urlparse(body.url)
         if parsed.scheme not in ("http","https") or not parsed.hostname or parsed.username or parsed.password: raise ValueError("provide an HTTP(S) endpoint without credentials in its URL")
         sid=str(uuid.uuid4())
         with store().lock:
-            store().db.execute("INSERT INTO sinks VALUES(?,?,?,1,?)",(sid,body.name,body.url,utcnow())); store().db.commit()
+            store().db.execute("INSERT INTO sinks VALUES(?,?,?,1,?)",(sid,body.name,body.url,utcnow()))
+            store().db.execute("INSERT INTO sink_options VALUES(?,?,?)",(sid,body.kind,body.index_name)); store().db.commit()
         store().audit("sink.created",{"id":sid,"name":body.name})
         return {"id":sid}
     @api.post("/sinks/{sid}/toggle")
@@ -295,17 +302,18 @@ def create_app(data_dir=None, start_receivers=True):
     @api.post("/demo/start")
     async def demo_start(body:dict|None=None):
         if app.state.demo["running"]: raise ValueError("replay already running")
-        count=min(max(int((body or {}).get("count",120)),5),1000)
+        count=min(max(int((body or {}).get("count",2187)),5),50000)
         app.state.demo={"running":True,"processed":0,"total":count,"label":"Synthetic replay"}
         async def run():
             try:
                 sources={}
-                for item in scenario(count):
+                for i, item in enumerate(scenario(count)):
                     if app.state.stop.is_set(): break
                     if item["source"] not in sources: sources[item["source"]]=await asyncio.to_thread(store().register_source,item["source"],"",item["kind"],"replay")
                     await asyncio.to_thread(store().ingest,item["raw"],sources[item["source"]]["id"],"scenario-replay")
                     app.state.demo["processed"]+=1
-                    await asyncio.sleep(.075)
+                    if (i + 1) % 50 == 0:
+                        await asyncio.sleep(0)
                 await asyncio.to_thread(store().seal)
             except Exception as exc: app.state.demo["error"]=str(exc)
             finally: app.state.demo["running"]=False
@@ -323,14 +331,15 @@ def create_app(data_dir=None, start_receivers=True):
     return app
 
 async def deliver_outbox(store):
-    rows=store.rows("SELECT o.*,s.url FROM outbox o JOIN sinks s ON s.id=o.sink_id WHERE o.status='pending' AND o.next_attempt<=? AND s.enabled=1 ORDER BY o.rowid LIMIT 20",(time.time(),))
+    from .outputs import send
+    rows=store.rows("SELECT o.*,s.url,COALESCE(c.kind,'http') kind,c.index_name FROM outbox o JOIN sinks s ON s.id=o.sink_id LEFT JOIN sink_options c ON c.sink_id=s.id WHERE o.status='pending' AND o.next_attempt<=? AND s.enabled=1 ORDER BY o.rowid LIMIT 20",(time.time(),))
     if not rows: return
     async with httpx.AsyncClient(timeout=3,trust_env=False,follow_redirects=False) as client:
         for row in rows:
             error=None; delivered=False
             try:
-                response=await client.post(row["url"],content=row["payload"],headers={"Content-Type":"application/json","Idempotency-Key":row["id"]})
-                response.raise_for_status(); delivered=True
+                await send(client,row)
+                delivered=True
             except Exception as exc: error=str(exc)[:500]
             with store.lock:
                 store.db.execute("UPDATE outbox SET status=?,attempts=attempts+1,error=?,next_attempt=? WHERE id=?",

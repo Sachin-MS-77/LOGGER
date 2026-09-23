@@ -88,6 +88,7 @@ class Witness:
     def close(self): self.db.close()
 
 class WitnessLedger:
+    trust_note='Local witnesses share one host. Verification detects inconsistency; it does not prove source truth or independent custody.'
     def __init__(self, directory):
         self.witnesses = [Witness(directory, f"witness-{i}") for i in range(1,4)]
         self.quorum = 2

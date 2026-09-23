@@ -1,227 +1,26 @@
 # LOGFLUX
 
-**Universal Log Intelligence · SIH Problem Statement 26156 · NTRO**
+**Evidence-preserving perimeter-log preprocessing with sandboxed, human-reviewed parser adaptation.**
 
-An offline-capable cybersecurity workspace for collecting perimeter logs, reviewing new parsers, and tracing normalized events back to original evidence.
+**Docker acceptance:** local verification passed. Hosted CI setup is pending; see the [workflow template](docs/ci/README.md).
 
-[Quick start](#start) · [How it works](#how-it-works) · [Feature coverage](docs/FEATURES.md) · [Architecture](docs/architecture.md) · [2-minute demo script](docs/demo-script.md) · [Verification report](docs/VERIFICATION.md)
+SIH problem statement **26156 · NTRO · Blockchain & Cybersecurity**.
 
-**Joining the team? Start with [TEAM_SETUP.md](docs/TEAM_SETUP.md)** for clone/download, installation, login and demo instructions.
+LOGFLUX receives device logs, preserves original message bytes, normalizes supported formats, and routes unfamiliar or drifted records into review. An approved, signed parser can replay retained events into new revisions without replacing raw evidence.
 
-LOGFLUX is a working, single-node perimeter-log prototype. It receives real network messages, preserves the original bytes, normalizes supported formats, and sends unfamiliar structures through a reviewed parser workflow. The dashboard, API, evidence verification, parser signatures, local AI adapter and exports use real backend operations.
+**Status:** working single-node application; 81 passing tests; Docker restart acceptance and native Elasticsearch Bulk verification passed locally. Three network witness processes and the separate Redpanda/ClickHouse worker experiment were exercised on one computer. Full OCSF conformance, replicated enterprise storage, independent-machine custody and billion-events/day capacity are **not** claimed. The saved GitHub token lacks workflow permission, so the CI template is included for a repository maintainer to install; no hosted CI pass is claimed.
 
-![LOGFLUX Command Center — live dashboard](docs/screenshots/command-center.png)
+[Team setup](docs/TEAM_SETUP.md) · [Measured results](#measured-results) · [Requirement coverage](#requirements-a-k) · [Architecture](docs/architecture.pdf) · [Verification](docs/VERIFICATION.md) · [Integration commands](docs/INTEGRATIONS.md)
 
----
-
-## How it works
-
-LOGFLUX is not just a log aggregator — it is a **tamper-evident, self-healing, AI-assisted telemetry intelligence system**. Every byte that enters the system is preserved in its original form before anything else happens to it. The pipeline is designed around one core principle: **you can always trace a normalized event back to the original packet, byte-for-byte.**
-
-Here is the complete data flow, from your live cyber range to the investigation workbench:
-
-```
-                        LIVE CYBER RANGE
-                               │
-       ┌───────────────────────┼───────────────────────┐
-       ↓                       ↓                       ↓
-    FIREWALL                 ROUTER                    IDS
-       │                       │                       │
-       └───────────────────────┼───────────────────────┘
-                               ↓
-                       ┌───────────────┐
-                       │ EVENT CAPTURE │  ← TCP · UDP · TLS Syslog · file · HTTP
-                       └───────┬───────┘
-                               ↓
-                   ┌────────────────────────┐
-                   │      EVIDENCE VAULT    │
-                   │  RAW BYTES + SHA-256   │
-                   │  TIMESTAMP + SOURCE ID │
-                   └───────────┬────────────┘
-                               ↓
-                   ★ MERKLE TREE (per batch) ★
-                               ↓
-                   ★ PERMISSIONED LEDGER ANCHOR ★
-                     (tamper-evident chain of custody,
-                      air-gap sync tolerant)
-                               ↓
-                   ┌────────────────────────┐
-                   │  TELEMETRY FINGERPRINT │
-                   └───────────┬────────────┘
-                               ↓
-                   ┌───────────┴───────────┐
-                   ↓                       ↓
-                KNOWN                   UNKNOWN
-                   ↓                       ↓
-           PLUGIN REGISTRY          DISCOVERY ENGINE
-                                           │
-                      ┌────────────────────┼────────────────────┐
-                      ↓                    ↓                    ↓
-             STRUCTURE DISCOVERY   SEMANTIC DISCOVERY   BEHAVIOR DISCOVERY
-             ★ Drain3 / Spell     ★ LLM proposes field  (cross-source signal)
-               template mining       mapping →
-                                   ★ deterministic validator
-                                     (regex / type / pattern check)
-                      └────────────────────┼────────────────────┘
-                                           ↓
-                                   CANDIDATE PARSER
-                                           ↓
-                             ★ WASM/WASI SANDBOX ★
-                             (no fs, no net, 64 KiB memory,
-                              10,000 fuel cap)
-                                           ↓
-                                    REPLAY ENGINE
-                             ★ + property-based fuzzing ★
-                             (mutation testing: fails safe,
-                              never silent data loss)
-                                           ↓
-                           CROSS-SOURCE VALIDATION
-                       ★ weighted confidence score ★
-                                           ↓
-                         HUMAN APPROVAL GATE
-                       ★ prioritized review queue ★
-                       (ranked by confidence, not FIFO)
-                                           ↓
-                             SIGNED PLUGIN
-                       ★ bundle = binary + SBOM +
-                         test vectors + Ed25519 sig ★
-                       (single-file, air-gap transferable)
-                                           ↓
-                           PRODUCTION REGISTRY
-                                           ↓
-                            PARSE + NORMALIZE
-                                           ↓
-                   ★ UNIVERSAL EVENT SCHEMA ★
-                     (OCSF/ECS-aligned, embedded
-                      schema-version hash)
-                                           │
-             ┌─────────────────────────────┼──────────────────────┐
-             ↓                             ↓                      ↓
-      DATA QUALITY                   EVENT GRAPH              SIEM / AI
-             ↓                             ↓
-      DRIFT DETECTION ────────────────────→ re-route drifted events
-             │                         back to discovery
-             └──────────────────────────────────────────────────────┐
-                                           ↓                        │
-                                   SELF-HEALING                     │
-                                   (approved replay)  ←─────────────┘
-
-                          (from EVENT GRAPH) ↓
-                                   ATTACK TIMELINE
-                                           ↓
-                            ★ PROVENANCE GRAPH ★
-                         (raw → parser v.x → normalized
-                          event → alert → case lineage,
-                          queryable)
-                                           ↓
-                                   INVESTIGATION
-```
-
----
-
-### Stage-by-stage breakdown
-
-#### ① Capture — *trust nothing, preserve everything*
-
-Firewalls, routers, and IDS appliances stream Syslog over **TCP, UDP, and TLS** (ports 5514/6514). LOGFLUX also accepts **file upload and authenticated HTTP**. A bounded receiver writes the **original bytes to immutable evidence storage before any parsing begins** — meaning even a catastrophically wrong parser can never destroy the raw record.
-
-#### ② Evidence Vault — *the unforgeable ground truth*
-
-Every received message is stored with:
-- `SHA-256` of the original bytes
-- Source IP and transport identity
-- Nanosecond receipt timestamp
-- Framing (octet-counted / newline / HTTP)
-
-These leaves are batched into a **Merkle tree**, and each checkpoint is signed by a **2-of-3 Ed25519 witness quorum** — forming a hash-chained, permissioned ledger anchor that provides tamper-evident chain of custody.
-
-#### ③ Telemetry Fingerprint → Known or Unknown
-
-Each ingested event's structure is matched against the **Plugin Registry**. Known formats (FortiGate, Cisco ASA, Suricata JSON, CEF, LEEF, pfSense CSV…) go directly to the approved parser. **Unknown or structurally drifted events are routed to the Discovery Engine** — they are never silently dropped.
-
-#### ④ Discovery Engine — *three lenses on every unfamiliar format*
-
-| Discovery mode | What it does |
-|---|---|
-| **Structure** | Drain3 / Spell template mining extracts recurring token patterns from raw text |
-| **Semantic** | A local LLM (Qwen3 0.6B) *proposes* field-to-schema mappings — output is untrusted data, checked by validators |
-| **Behavior** | Cross-source confidence weighting catches formats that appear across multiple senders |
-
-The LLM cannot approve, deploy, or modify anything by itself. All proposals are passed through **deterministic regex/type/pattern checks** before a candidate parser is assembled.
-
-#### ⑤ WASM/WASI Sandbox + Replay Engine — *zero-trust parser execution*
-
-Candidate parsers run in **Wasmtime** with:
-- No filesystem or network imports
-- 64 KiB memory ceiling
-- 10,000 fuel cap (prevents infinite loops)
-
-The **Replay Engine** then runs the parser against all retained events for that format, including **property-based fuzzing with mutation testing** — the parser must never silently lose data, must fail loud.
-
-#### ⑥ Human Approval Gate — *the last line of defence*
-
-The review queue is **ranked by weighted confidence score**, not FIFO — the most-likely-correct parsers surface first. A reviewer sees the raw bytes, the proposed field mappings, semantic assertions, and the full validation report before approving. No parser enters production without a human signature.
-
-#### ⑦ Signed Plugin Bundle — *portable, verifiable, air-gap safe*
-
-Approved parsers are packaged as a **single signed bundle**:
-
-```
-bundle = WASM binary + SBOM + test vectors + Ed25519 signature
-```
-
-Bundles are importable/exportable from the UI and transferable across air-gapped environments. The registry pins trusted public keys; only bundles signed by a known key can activate.
-
-#### ⑧ Universal Event Schema — *one truth for downstream*
-
-All normalized events conform to a **LOGFLUX 1.0 schema** (OCSF/ECS-aligned) with an embedded schema-version hash. Unmapped source fields are preserved. Export formats: JSONL, ECS projection, CSV. HTTP output uses stable idempotency keys and at-least-once delivery with backoff retry.
-
-#### ⑨ Drift Detection + Self-Healing — *the parser stays honest*
-
-A structural fingerprint is computed for every source on an ongoing basis. When a known source's log format **drifts from its baseline** (firmware update, config change), LOGFLUX quarantines the drifted events and routes them back through the Discovery Engine. Once a new parser version is approved, **retained events replay as new revisions** — originals never change.
-
-#### ⑩ Provenance Graph → Investigation — *every alert has a receipt*
-
-The full lineage of every event is queryable:
-
-```
-raw bytes → parser v.x → normalized event → alert signal → saved case
-```
-
-The Investigation workspace lets you select IP nodes, filter by source and receipt time, inspect scoped signals, follow the attack timeline, and save evidence cases. Every case links back to the original Merkle-verified bytes.
-
----
-
-## Project status
-
-**Working single-node prototype with tested hardware firewall connectivity.** The dark LOGFLUX interface and backend workflows are fully implemented and verified against real perimeter devices.
-
-| Workspace | What it does |
-|---|---|
-| Command Center | Actual event counts, saved cases, rule signals, IP-pair relationships, source distribution and 30-minute activity charts |
-| Event Stream | Source/status/mode search, raw-versus-normalized inspection, revisions and exports |
-| Sources | Register device senders, inspect transport status and separate live, replay and lab traffic |
-| Parser Lab | Discover unfamiliar structures, review suggested mappings, validate, sign, version and replay retained events |
-| Evidence Vault | Original hashes, related cases, Merkle checkpoints and on-demand evidence verification |
-| Investigation | Select IP nodes, zoom, filter by source/receipt time, inspect scoped signals and save evidence cases |
-| System & Outputs | Runtime status, local model availability, schema information and retrying HTTP outputs |
-
-The default **Obsidian** theme uses violet accents on dark surfaces; **Pearl** and **Rose** are also available. All assets are served locally. Graphs show observed IP addresses, not inferred wallet ownership, host identities or users. Some analytics are bounded to the latest 1,000 matching events or latest 100 alerts; these limits are labeled in the interface.
+![Current LOGFLUX Command Center](docs/screenshots/command-center.png)
 
 ## Start
 
-Requires Python 3.12+ (tested with Python 3.14 on Apple Silicon). Start with 4 GB RAM for collection; allow extra memory for a local model. No Node build or cloud account is needed.
-
-Clone the default branch first (the runnable project is at the repository root):
+Requires Python 3.12+; tested locally with Python 3.14 on macOS ARM64 and Python 3.12 in Docker. No frontend build or cloud account is required.
 
 ```sh
 git clone https://github.com/Sachin-MS-77/LOGGER.git
 cd LOGGER
-```
-
-macOS / Linux:
-
-```sh
 sh scripts/setup.sh
 .venv/bin/python scripts/run.py
 ```
@@ -234,176 +33,217 @@ py -3 -m venv .venv
 .venv\Scripts\python scripts\run.py
 ```
 
-Open **http://127.0.0.1:8765**. Paste the token from `data/admin-token`. The browser keeps it only for its current session. Runtime data, private keys and tokens must stay out of source-control and submitted ZIP files.
+Open **http://127.0.0.1:8765** and use the locally generated token in `data/admin-token`. Keep tokens, raw operational logs and private keys outside Git. Windows native installation is documented, not independently verified in this review.
 
-For the already-installed demo on this computer, double-click **Start LOGFLUX.command** at the root of this project. It uses the prepared workspace runtime and preserved demo database. If moving the source elsewhere, use the installation steps above.
+Choose **Run demo replay** for 2,187 clearly labeled synthetic events. A fresh clone contains no operational database, model weights or pre-approved parser keys. Theme choices are Obsidian, Pearl and Rose.
 
-## Demonstrate the complete flow
+## Why the sandbox matters
 
-1. **Command center → Run demo replay:** inject 120 explicitly labeled synthetic events across five source families. Counters and graphs come from stored events.
-2. **Event stream:** search, filter by source/status/traffic mode, pause refresh, inspect raw bytes beside normalized fields.
-3. **Parser lab:** select the unfamiliar router format. Review the deterministic suggestion or request a **Local AI proposal**. `origin` is the source address and `target` is the destination in the included synthetic fixture.
-4. Add semantic assertions for a displayed sample, then **Save & validate**. Review the results, enter your reviewer name and approve. Validation does not replace semantic review.
-5. **Replay retained events:** a new normalized revision appears while the original byte hash stays unchanged. **New parser version** creates a draft without overwriting prior approval. The registry supports signed bundle import/export and activation/rollback.
-6. **Trigger sample drift:** the changed FortiGate fixture enters review. Map `client_ip` and `server_ip`, validate, approve and replay.
-7. **Evidence vault:** inspect an event and choose **Verify evidence**. Hash, manifest, Merkle path and quorum signatures are checked when requested.
-8. **Investigation:** select an address, inspect its timeline and detections, and save a case. Shared IPs indicate observations, not a proven attack narrative.
-9. **System & outputs:** export complete JSONL, an ECS projection, or CSV. Configure an HTTP collector to demonstrate the durable retry outbox.
+The **WASM field-selection sandbox** is the central technical feature. Model output is declarative mapping data; it cannot execute arbitrary Python or approve itself. After validation and human approval, signed field-selection modules run with:
 
-## Connect a real firewall or router
+- No host imports: filesystem, network and environment access are rejected.
+- A 64 KiB linear-memory ceiling and 10,000 execution fuel.
+- A 64 KiB binary-input limit and a checked `(i32) -> i32` selector signature.
 
-A device must export logs. LOGFLUX cannot automatically understand every proprietary format or connect to devices with no accessible log interface.
+[Eleven adversarial tests](docs/SECURITY-EVIDENCE.md) exercise loops, memory exhaustion, forbidden imports, malformed modules and invalid signatures. Structural decoding still runs in trusted Python. Bounded execution does not establish correct field meaning; semantic assertions and human review remain necessary. No claim of competitor exclusivity is made.
 
-Start the collector on the intended network interface:
+```text
+Firewall / router / IDS → TCP / TLS / UDP / HTTP / file
+ → durable original bytes + SHA-256 + source + receipt metadata
+ → structural decoding → approved mapping → typed LOGFLUX event
+                         ↓ unknown / drifted
+                 discovery → review → validation → signed WASM parser
+                         ↓ approved replay
+                 new normalized revision; original bytes unchanged
+
+Evidence manifests → Merkle batches → signed witness checkpoints
+Normalized events → dashboard / cases / JSONL / ECS / CSV / durable outputs
+```
+
+## Workspaces and screenshots
+
+These screenshots show the running application with synthetic replay data. Counts are observations from that demonstration, not performance benchmarks.
+
+### Event Stream
+
+Filter by source, processing status and traffic mode. Open a record to compare its original content with the normalized fields and inspect revisions. Failed or unknown records stay visible.
+
+![Event Stream](docs/screenshots/event-stream.png)
+
+### Sources
+
+Register senders, inspect traffic and separate live, replay and lab modes. A sender must actually export logs; registering a name does not connect arbitrary hardware.
+
+![Sources](docs/screenshots/sources.png)
+
+### Parser Lab
+
+Review sample attributes, select mappings, add semantic expectations, validate, approve and replay. Approved bundles are signed and versioned; imports are staged and trusted keys are pinned.
+
+![Parser Lab](docs/screenshots/parser-lab.png)
+
+### Evidence Vault
+
+Inspect original hashes, sealed batches and witness receipts. Verification checks raw bytes, manifest fields, Merkle inclusion, ordered checkpoint history and pinned signatures.
+
+![Evidence Vault](docs/screenshots/evidence-vault.png)
+
+### Investigation
+
+Select observed IP addresses, filter the timeline and save cases linked to event IDs. The graph shows observed network relationships, not actor attribution or wallet ownership. Some views use the latest 1,000 matching events or 100 alerts; the UI labels these bounds.
+
+![Investigation](docs/screenshots/investigation.png)
+
+### System & Outputs
+
+Inspect listeners, schema information and local model availability. Configure a generic JSON HTTP sink or the native Elasticsearch Bulk connector. The outbox retries failed deliveries; downstream consumers must tolerate retries.
+
+![System and Outputs](docs/screenshots/system-outputs.png)
+
+## Measured results
+
+All numbers describe the specified run. Coverage is not detection accuracy, and offered load is not achieved throughput.
+
+### Public corpus coverage
+
+`python scripts/fetch_datasets.py` stages complete archives and hashes under ignored `data/`. `python scripts/measure_coverage.py --manifest docs/dataset-manifest.json` scans every selected record. It performs a **fresh built-in registry dry-run**, excluding learned plugins, drift history, storage and LLM calls. Metadata lines are separate. Unknown and failed records are retained in the report; 2,000-line samples are never substituted for full corpora.
+
+| Complete file | Records | Normalized % | Partial % | Discovery % | Failed % |
+|---|---:|---:|---:|---:|---:|
+| linux / Linux.log | 25,567 | 0.0000 | 0.0000 | 99.9218 | 0.0782 |
+| apache / Apache.log | 56,482 | 0.0000 | 0.0000 | 100.0000 | 0.0000 |
+| openssh / SSH.log | 655,147 | 0.0000 | 0.0000 | 100.0000 | 0.0000 |
+| honeynet30 / capture.log | 307,524 | 99.9935 | 0.0000 | 0.0065 | 0.0000 |
+| honeynet34 / SotM34/iptables/iptablesyslog | 179,752 | 99.9449 | 0.0000 | 0.0200 | 0.0350 |
+| honeynet34 / SotM34/snort/snortsyslog | 69,039 | 0.0000 | 0.0000 | 100.0000 | 0.0000 |
+| maccdc2012 / capture.log | 22,694,356 | 0.0000 | 0.0000 | 100.0000 | 0.0000 |
+
+
+[Complete per-file counts](docs/coverage.json) · [Before the iptables adapter](docs/coverage-before-iptables.json) · [Dataset manifest](docs/dataset-manifest.json)
+
+The iptables adapter preserves repeated inner-packet attributes without overwriting outer addresses. It does not infer allow/deny from INBOUND/OUTBOUND. Linux, Apache, OpenSSH, older Snort text and Zeek text coverage gaps remain visible rather than being hidden behind an aggregate percentage. The before/after improvement here is a coded adapter improvement, not a claim that AI automatically learned these corpora.
+
+Dataset attribution: [Loghub](https://github.com/logpai/loghub) (research/academic terms; see its citation), [Honeynet Scan 30](https://honeynet.onofri.org/scans/scan30/), [Scan 34](https://honeynet.onofri.org/scans/scan34/), [SecRepo](https://www.secrepo.com/). Raw corpora are not redistributed in GitHub.
+
+### File/replay versus live sockets
+
+The historical **file/replay-style, sequential in-process Store baseline** was **2,187.8 events/s** on 2,000 synthetic events. It excludes actual file reading, sockets, LLM calls and a concurrent dashboard: [exact scope](docs/benchmark.json). It must not be presented as a live socket rate.
+
+The actual collector was tested with four concurrent connections for **120 seconds per rate**, on the same computer as the sender. Other local work also used that computer; these are development-machine measurements, not dedicated-host capacity certification.
+
+| Transport | Offered events/s | Actual sent/s | Durable received/s in window | Unreceived after drain |
+|---|---:|---:|---:|---:|
+| TCP | 500 | 500.00 | 500.00 | 0 (0.0000%) |
+| TCP | 2,000 | 1,453.32 | 1,103.35 | 33,052 (18.9521%) |
+| TCP | 4,000 | 1,285.47 | 964.61 | 20,052 (12.9992%) |
+| TCP | 8,000 | 1,462.38 | 1,082.56 | 28,340 (16.1494%) |
+| TCP | 16,000 | 1,658.75 | 1,232.62 | 33,143 (16.6506%) |
+| UDP | 500 | 500.00 | 500.00 | 0 (0.0000%) |
+| UDP | 2,000 | 2,000.00 | 814.84 | 138,130 (57.5542%) |
+| TLS | 500 | 500.00 | 499.38 | 75 (0.1250%) |
+
+
+At overload, send calls can stall under TCP backpressure. “Unreceived” means not durably observed by the end of a 15-second drain; it can include backlog and does not by itself prove permanent network loss. Uncertain final sends and sender errors are reported separately. TLS showed 75 unreceived records in its run; that discrepancy remains an explicit finding, not a lossless-delivery claim. UDP is always best effort.
+
+Reports: [TCP baseline](docs/benchmark-socket-baseline.json), [TCP overload](docs/benchmark-sustained-final.json), [UDP](docs/benchmark-udp.json), [TLS](docs/benchmark-tls.json). Each report includes an explicitly labeled arithmetic events/day projection; **no 24-hour or billion-event run was performed**.
+
+### Separate broker / columnar experiment
+
+Four Redpanda partitions → independent Python workers → ClickHouse, with durable offset commits, stable event IDs, batch Merkle proofs and aggregate roots. All 2,000 raw hashes and shard proofs verified in each run; resuming committed offsets wrote no additional records.
+
+| Workers | Worker-path events/s | Producer + worker seconds |
+|---|---:|---:|
+| 1 | 3,003.40 | 1.833 |
+| 2 | 4,571.08 | 1.5245 |
+| 4 | 4,222.39 | 1.5668 |
+
+
+Worker-path timing includes process startup, broker reading, normalization, batch proofs, insertion and offset commits. Producer timing is separate; final verification and root aggregation are excluded. Two workers outperformed four in this small run: scaling is **not linear**. These short trials are not sustained capacity results.
+
+The experiment is separate from the SQLite dashboard and its parser registry. It has one broker and one columnar node, static partition assignment, no replication or automatic failover. [Run it](docs/INTEGRATIONS.md). The four-worker aggregate root was signed in the [network witness test](docs/witness-verification.json).
+
+## Requirements a-k
+
+With a running demonstration and existing event/candidate, these actions provide short, reviewable checks. Setup/download/model staging can take longer than a minute. All `/api/*` calls require a Bearer token.
+
+| PS | Requirement | Reviewer action | Boundary |
+|---|---|---|---|
+| a | Preserve raw event data | `GET /api/events/{id}/raw`; compare exact bytes | After durable acceptance; pre-commit loss is possible |
+| b | Extract source attributes | Event inspector → extracted attributes | Tested format subsets; unsupported structures remain explicit |
+| c | Common taxonomy | `GET /api/status`; inspect a normalized event | Custom OCSF-inspired schema, not full OCSF |
+| d | Traceability | `GET /api/events/{id}/provenance` and `/proof` | Default witnesses share one host |
+| e | New-source onboarding | Parser Lab → validate → approve → replay | No restart; human semantics review required |
+| f | Unified visibility | Command Center → source/status/mode filters | Bounded graph/alert queries are labeled |
+| g | SIEM/lake integration | System & Outputs → Elasticsearch Bulk; inspect delivered count | Live local Elastic test passed; generic HTTP is not Splunk HEC |
+| h | AI/ML-ready analytics | Inspect typed JSONL/ECS export; optional Local AI proposal | Qwen3 mapping assistance; detections are rules |
+| i | Reduced parser effort | `python -m pytest tests/test_pipeline.py -k unknown_approval -v` | Demonstrates unparsed→normalized without handwritten parser; no measured time-saving claim |
+| j | Air gap | System & Outputs → offline guide; inspect local asset requests | Dependencies/models/images must be staged; physically isolated trial pending |
+| k | Container | `docker compose up --build -d`, then `GET /health` | Local restart/byte/proof acceptance passed; hosted CI setup pending |
+
+## Real devices and replay
 
 ```sh
 LOGFLUX_SYSLOG_HOST=0.0.0.0 .venv/bin/python scripts/run.py
 ```
 
-Keep the dashboard bound to loopback, or place an authenticated HTTPS reverse proxy in front of it. In the device's remote-log settings, choose the collector computer's LAN IP and TCP port **5514** or UDP port **5514**. Allow that port on the host firewall. Register the sender IP under **Sources**. Do not send to `127.0.0.1` from another machine.
-
-TCP accepts RFC6587 octet-counted frames and newline frames. UDP is best effort: messages dropped before receipt cannot be recovered. HTTP upload supports exact single-message bytes or newline framing. Use `scripts/send_logs.py` to send a captured fixture with preserved bytes.
+Set the device's destination to the collector's LAN address, TCP **5514** (preferred) or UDP **5514**, and register the sender. TLS uses **6514** with `LOGFLUX_TLS_CERT` and `LOGFLUX_TLS_KEY`; `LOGFLUX_TLS_CA` enables client-certificate validation. Keep the dashboard on loopback or behind authenticated HTTPS. TCP acknowledgements do not prove durable application receipt.
 
 ```sh
-.venv/bin/python scripts/send_logs.py samples/perimeter.log --transport tcp
+.venv/bin/python scripts/send_logs.py samples/perimeter.log --transport tcp --rate 100
 ```
 
-TLS with a certificate trusted by the sender:
+Earlier team documentation reports a physical-firewall test, but no model/firmware acceptance report is committed; this review does not independently certify that hardware. Existing adapters cover tested FortiGate, ASA deny, Suricata, CEF, LEEF, pfSense and iptables subsets. Other formats require review or a decoder extension.
+
+## Models, scores and schema
+
+- **Qwen3 0.6B** (`qwen3:0.6b`) optionally proposes mappings through Ollama or llama.cpp. Stage the runtime and weights separately. No cloud fallback.
+- **Drain3** mines recurring templates; it is not an attack classifier.
+- Detections are deterministic rules. No trained anomaly detector, Graph ML, SHAP or wallet clustering is implemented.
+- The **Fracture Index** is an uncalibrated activity heuristic: `(min(8×denied/alerted,100) + min(5×source-timestamped,100) + min(6×unique destinations,100)) / 4`. Missing taint is N/A, so its attainable maximum is 75 on a displayed 0–100 scale. It is not threat probability or accuracy.
+- LOGFLUX 1.0 is **OCSF-inspired**. ECS export is a partial mapping with the normalized event preserved in an extension.
+
+Configure local model access using `LOGFLUX_LLM_URL`, `LOGFLUX_LLM_MODEL` and optionally `LOGFLUX_LLM_API_KEY_FILE`; explicitly allow private hosts using `LOGFLUX_LLM_ALLOWED_HOSTS`.
+
+## Docker, offline installation and witnesses
 
 ```sh
-LOGFLUX_SYSLOG_HOST=0.0.0.0 LOGFLUX_TLS_CERT=/path/server.pem \
-LOGFLUX_TLS_KEY=/path/server.key .venv/bin/python scripts/run.py
+docker compose up --build -d
+python scripts/verify_docker.py --container "$(docker compose ps -q logflux)" --api http://127.0.0.1:8765 --port 5514
 ```
 
-TLS uses **6514**. Set `LOGFLUX_TLS_CA` to require client certificates. Device-specific configuration differs by model and firmware; verify one received event before presenting hardware compatibility.
+The acceptance script restarts the selected container: use a test deployment. Local checks passed for health, authenticated ingestion, exact bytes, TCP/UDP receipt and proof verification after restart. The image runs non-root with a read-only root filesystem, a persistent volume and dropped capabilities. [Docker evidence](docs/docker-verification.json).
 
-Included adapters cover tested fixture subsets of FortiGate key/value, Cisco ASA deny messages, Suricata JSON, CEF, LEEF and pfSense CSV. Structural decoders also accept JSON, safe XML, headered CSV, Syslog wrappers, key/value and plain-text token templates. New signatures enter review. Binary/unparseable bytes remain in evidence with a failed status.
+For offline installation, run `python scripts/prepare_offline.py` on a matching OS/CPU/Python machine, transfer the source and wheelhouse, verify its manifest against a trusted copy and install with `--no-index`. Transfer optional model weights/runtime and container images separately. Fonts and interface assets are local.
 
-## Controlled socket lab
+Optional `LOGFLUX_WITNESS_CONFIG` connects three authenticated services with distinct pinned keys. Quorum, outage, restart/catch-up and conflict tests passed with separate processes on one host. This does **not** prove independent custody. Independent machines and administrators remain necessary. [Deployment and single-witness verification](docs/INTEGRATIONS.md).
 
-```sh
-.venv/bin/python lab/socket_range.py --token-file data/admin-token --count 100
-```
-
-This sends synthetic firewall/router/IDS messages through real localhost TCP on the dedicated **5515** lab listener. It does not scan, exploit, emulate a physical firewall or create actual malicious traffic. `lab` and `replay` remain distinct from ordinary device traffic. A mixed-source lab stream can trigger conservative structure-drift review.
-
-## Which ML model is used?
-
-- **Qwen3 0.6B**, alias `qwen3:0.6b`, is an optional local language model for **parser field-mapping proposals**. The recorded test used a Q8_0 GGUF through llama.cpp. Weights and model executables are not included in GitHub.
-- **Drain3** mines recurring log templates; it is not a trained attack classifier.
-- **Detection signals use deterministic rules**, including IDS signals and blocked management-port connections. No trained anomaly detector, Graph ML model, SHAP explainer or wallet-clustering model is implemented.
-
-### Fracture Index boundary
-
-The redesigned gauge is an **uncalibrated activity heuristic**, not detection accuracy, confidence or threat probability. It computes:
-
-```text
-[min(8 × denied/alerted events, 100)
- + min(5 × source-timestamped events, 100)
- + min(6 × unique destinations, 100)] / 4
-```
-
-Taint data is unavailable and displayed as N/A. Keeping the existing four-part formula means the maximum currently attainable is **75**, even though the visual scale is 0–100. Traffic volume and valid timestamps increase this number without establishing malicious activity. Do not present it as a validated risk model.
-
-## Local AI
-
-Local model proposals are optional. Manual/deterministic review works without a model. The included adapter supports Ollama and llama.cpp's local OpenAI-compatible endpoint. Default endpoint `http://127.0.0.1:11434`, model alias `qwen3:0.6b`.
-
-For Ollama, stage its runtime and run `ollama pull qwen3:0.6b` while connected, then `ollama serve`. For llama.cpp, load the GGUF locally and use `--alias qwen3:0.6b`. Configure `LOGFLUX_LLM_URL`, `LOGFLUX_LLM_MODEL` and optionally `LOGFLUX_LLM_API_KEY_FILE`. Explicit private-host allowlisting uses `LOGFLUX_LLM_ALLOWED_HOSTS`. No cloud fallback exists.
-
-On this demo computer, a Qwen3 0.6B GGUF and llama.cpp runtime are already staged in the workspace. **Start LOGFLUX.command** can start them. Model weights and the model executable are not included in the portable source ZIP. Transfer the model/runtime separately for another air-gapped computer.
-
-AI output is constrained to known fields and checked against sample types. It cannot approve or deploy itself. The recorded local-model test demonstrates three rejected invalid fields. Model accuracy is not guaranteed.
-
-## Air-gapped setup
-
-On a connected machine matching the target's OS, CPU and Python version:
-
-```sh
-python scripts/prepare_offline.py
-```
-
-Transfer the source and `wheelhouse/`, a compatible Python installer and any optional model/runtime. On the isolated target, run `scripts/setup.sh`: it installs with `--no-index`. Verify the wheel hashes in `wheelhouse/manifest.json` against a trusted copy before transfer. The build machine's staged wheelhouse targets **macOS ARM64 / Python 3.14** and is excluded from GitHub. Generate a wheelhouse for the actual target platform.
-
-A fresh virtual environment was installed from these wheels without a package index, and all 48 tests passed there. An actual physically disconnected hardware-network test remains an evaluation step. The application serves all assets locally and makes outbound requests only to configured local AI or output endpoints.
-
-## Container deployment
-
-```sh
-docker compose up --build
-```
-
-The image uses a non-root user, a writable data volume, a read-only root filesystem and no extra Linux capabilities. The dashboard is published on loopback. Syslog ports are exposed for devices. Stage images using `docker save` / `docker load` before isolation; a Docker build itself requires dependencies/base images unless already staged.
-
-**The Docker daemon was unavailable on the build computer.** The configuration is included and statically checked, but an actual image build/run is not claimed.
-
-## Tests and benchmark
+## Tests and upgrade notes
 
 ```sh
 .venv/bin/python -m pytest tests -q
-.venv/bin/python scripts/benchmark.py --events 2000 --output docs/benchmark.json
+.venv/bin/python scripts/verify_remote_witnesses.py
 ```
 
-The current 54-test suite covers format adapters, random raw preservation, immutable evidence, malformed inputs, replay/semantic checks, parser revisions and rollback, signature trust, sandbox bounds, witness conflicts/catch-up, HTTP auth, real TCP/UDP/TLS sockets, source edits that preserve historical evidence, and HTTP retry idempotency. Upgrade tests also cover legacy configuration, signed pre-rename parser imports, historical schema provenance and graph filters. Two upstream test-library deprecation warnings remain.
+81 tests passed in the final local suite, including 11 sandbox attacks, real TCP/UDP/TLS framing, raw preservation, replay, signatures, source-history preservation, Elastic retry errors and scale offset safety. Two upstream test-library deprecation warnings remain.
 
-Single-node baseline on Apple M-series ARM64: **2,000 events, 2,187.8 events/s, 0.08 ms p95 processing**, 1,600 normalized and 400 intentionally unknown, with a verified sealed proof. This measures the storage layer only (excludes network I/O, LLM, and concurrent dashboard). See `docs/benchmark.json` for precise scope.
+Back up the private data directory before upgrading. Keep existing signing keys and volumes. Legacy configuration and exact historical schema hashes remain supported without rewriting evidence. FortiGate `eventtime` records now include epoch-unit information in their fingerprint; existing mappings for those records require review. Changing witness trust sets requires a fresh data directory rather than silently changing historical trust. [Documented drift example](docs/DRIFT-DEMO.md).
 
-## Production-scale architecture
+## Submission package
 
-The single-node prototype establishes a per-core processing baseline. The LOGFLUX architecture is designed from the ground up for horizontal scale:
+- [Five-slide PPT](docs/LOGFLUX-final.pptx): refreshed branding, current screenshots, built-versus-pending boundaries.
+- [Two-minute video](docs/LOGFLUX-demo.mp4): 30 seconds of slides + 90 seconds of the real application, captions, no narration audio.
+- [Drift clip](docs/LOGFLUX-drift-demo.mp4): excerpt of timestamp-unit review, approval and replay using constructed documented-format fixtures.
+- [Demo script](docs/demo-script.md) and [two-page architecture](docs/architecture.pdf).
+- [SIH idea title](docs/submission/idea-title.txt) and [40,000-character description](docs/submission/idea-description.txt), below the stated 50,000-character limit.
+- [Drawback resolution](docs/DRAWBACKS.md), [security evidence](docs/SECURITY-EVIDENCE.md), [verification](docs/VERIFICATION.md).
 
-| Deployment tier | Ingestion path | Throughput |
-|---|---|---|
-| **Single node** (this prototype) | Direct SQLite WAL | **~2,200 events/s · ~190 M/day** |
-| **Small cluster** (8 workers + Kafka) | Partitioned broker → parallel workers | **~17,500 events/s · ~1.5 B/day** |
-| **Production cluster** (50 workers + Kafka + Flink) | Distributed stream processing | **~109,000 events/s · ~9.4 B/day** |
+## Team
 
-The production architecture replaces SQLite with:
-- **Apache Kafka** — durable, partitioned ingest broker with backpressure and replay
-- **Apache Flink** — stateful stream processing workers, one per source partition
-- **Object storage (S3/WORM)** — immutable raw evidence at scale; Merkle roots checkpointed separately
-- **Independent witness nodes** — Ed25519 witnesses on separate machines for true custody separation
-- **Horizontal parser workers** — WASM sandbox pool, auto-scaled by queue depth
-- **Distributed query store** — ClickHouse or Elasticsearch for the investigation and dashboard layer
+| Name | Role |
+|---|---|
+| Praveena R K | Team Lead · Architecture & System Design |
+| Sachin M | Backend · Security, Integrity & API |
+| Pavithra S | Frontend · UI/UX & Dashboard |
+| Madhusree S | Data Pipeline · Parser Development & Testing |
 
-The core pipeline stages (capture → evidence commit → parse → normalize → sign → export) are **stateless per event** — horizontal scaling is additive. The evidence integrity model (Merkle + Ed25519) and signed plugin supply chain operate identically at any scale.
-
-## API and integrations
-
-All `/api/*` routes require `Authorization: Bearer <token>`. `GET /health` is a shallow public health check. Useful routes:
-
-- `POST /api/sources`, `POST /api/ingest`, `POST /api/upload`
-- `GET /api/events`, `GET /api/events/{id}/raw`, `/proof`, `/provenance`
-- `GET /api/export?format=jsonl|ecs|csv&offset=0` (maximum 1,000 per page; increment offset)
-- `GET /api/candidates`, `PUT /api/candidates/{id}/mapping`, `POST .../validate`, `/approve`, `/replay`, `/revise`
-- `GET /api/plugins`, `POST /api/plugins/import`, `POST /api/plugins/{id}/activate`
-- `GET /api/metrics` (Prometheus text, authenticated)
-
-HTTP outputs accept LOGFLUX JSON envelopes, use stable delivery IDs and retry with backoff. Receivers should deduplicate on `Idempotency-Key`. Delivery is at least once. The universal HTTP outbox integrates with any SIEM or data lake that accepts JSON webhooks — including Splunk HEC, Elastic ingest pipelines, and custom Kafka consumers. The LOGFLUX 1.0 schema is OCSF-aligned with native ECS export; the ECS projection maps all standard fields including source/destination IP, port, action, severity, protocol, and event category.
-
-## Evidence integrity and blockchain anchoring
-
-Original event bytes commit before parsing. Normalized revisions are append-only. Each event leaf is hashed with a domain prefix (`\x00`) and batched into a **Merkle tree**; parent nodes use prefix `\x01` to prevent second-preimage attacks. Three independent **Ed25519 witnesses** sign ordered checkpoints with a **2-of-3 quorum** — forming a cryptographically chained permissioned ledger. Witnesses detect and reject any conflicting checkpoint, providing tamper-evident chain of custody aligned with the blockchain-in-cybersecurity theme of SIH PS 26156. Witnesses are deployable on separate machines for full custody separation in production.
-
-TCP and TLS Syslog paths are **lossless-on-acceptance** — the original bytes are committed before any acknowledgement is sent. UDP is offered as a best-effort transport (standard Syslog behavior); TCP or TLS is recommended for evidence-grade collection.
-
-Wasmtime executes a bounded field-selection module with no host imports, 64 KiB memory, and 10,000 fuel. Trusted Python handles structural decoding. Parser projections are sandboxed WebAssembly, not arbitrary LLM-generated code. See `docs/FEATURES.md` for complete requirement coverage.
-
-## Upgrading an earlier checkout
-
-Back up the private data directory before changing versions. Keep the same data path to retain evidence, cases and signing keys. `LOGFLUX_*` environment variables are preferred; legacy `AEGIS_*` variables remain supported as fallbacks. New variables take priority. Renamed schemas do not rewrite stored revisions or old signed parser payloads; imports accept only the current schema and the exact compatible pre-rename schema hash.
-
-New ECS projections use the `logflux` extension key and metrics use the `logflux_` prefix. Update downstream dashboards/adapters that used the old names. New browser sessions require the existing server token again. Older Docker volumes must be explicitly retained or mounted at `/var/lib/logflux`; changing a Compose project/service name does not migrate data automatically.
-
-## Submission files
-
-- `docs/architecture.pdf` — two pages
-- `docs/LOGFLUX-SIH-final.pptx` — existing presentation; review branding/screenshots before submission
-- `docs/LOGFLUX-demo.mp4` — 60-second screenshot walkthrough with selectable English captions, no audio
-- `docs/demo-script.md` — 30-second PPT + 90-second live demo script
-- `docs/FEATURES.md` — requirements and original-plan coverage
-- `docs/test-results.xml`, `docs/benchmark.json` — reproducible evidence
-
-Repository: [Sachin-MS-77/LOGGER](https://github.com/Sachin-MS-77/LOGGER). Use the default `main` branch for this verified release. Earlier Claude commits on `master` are retained in its history; this release restores the project to the repository root for straightforward cloning and setup.
-
-The older ZIP, PDF, MP4 and slide artifacts may show previous UI states; they are not a recording of this verification. Record the current application using the updated script and add team details and verified hardware models before submission.
+Roster supplied by the team. Confirm it matches SIH registration and actual contributions. Genuine commit history is retained; stars/forks and invented contributor activity are not evaluation evidence.

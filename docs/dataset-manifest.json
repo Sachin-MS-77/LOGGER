@@ -1,0 +1,310 @@
+{
+  "retrieved_at": "2026-09-23T11:09:01Z",
+  "datasets": [
+    {
+      "dataset": "linux",
+      "url": "https://zenodo.org/records/8196385/files/Linux.tar.gz?download=1",
+      "attribution": "Loghub full Linux corpus; research/academic terms",
+      "sampled": false,
+      "status": "downloaded",
+      "archive_sha256": "7e1f820d8d45ae086032e515d9ce8d079a102a9b37dcff5b41a8e60b1f857820",
+      "files": [
+        {
+          "path": "data/datasets/linux/extracted/Linux.log",
+          "bytes": 2349686,
+          "sha256": "b541078328bf5402c254e7e8971a95963c464858031889ff6e15b6d1a857d490"
+        }
+      ]
+    },
+    {
+      "dataset": "apache",
+      "url": "https://zenodo.org/records/8196385/files/Apache.tar.gz?download=1",
+      "attribution": "Loghub full Apache corpus; research/academic terms",
+      "sampled": false,
+      "status": "downloaded",
+      "archive_sha256": "f2cb5014453c8a0f71596838e1639a2131ff6d360839ad280409f621a6cac452",
+      "files": [
+        {
+          "path": "data/datasets/apache/extracted/Apache.log",
+          "bytes": 5135876,
+          "sha256": "23e616a1ed529bab9b20b9bc345d37035061eee971d246102bcc4937e51a039b"
+        }
+      ]
+    },
+    {
+      "dataset": "openssh",
+      "url": "https://zenodo.org/records/8196385/files/SSH.tar.gz?download=1",
+      "attribution": "Loghub full OpenSSH corpus; research/academic terms",
+      "sampled": false,
+      "status": "downloaded",
+      "archive_sha256": "296610a35773f58b7c295e5407fc5ccdf48beb3c544fc14a6309addf904a2712",
+      "files": [
+        {
+          "path": "data/datasets/openssh/extracted/SSH.log",
+          "bytes": 73417506,
+          "sha256": "89eee9e36c182722f9fadc6e5617a4818ffc66109e7e222b8f9e8b78fc3aa2f3"
+        }
+      ]
+    },
+    {
+      "dataset": "honeynet30",
+      "url": "https://honeynet.onofri.org/scans/scan30/honeynet-Feb1_FebXX.log.gz",
+      "attribution": "Honeynet Scan of the Month 30 archive mirror",
+      "sampled": false,
+      "status": "downloaded",
+      "archive_sha256": "389ec4249f52ca9fd7160213499d6942f064591a51bf9798a2ad4ec7d0fd5b93",
+      "files": [
+        {
+          "path": "data/datasets/honeynet30/extracted/capture.log",
+          "bytes": 67796998,
+          "sha256": "765f70f3fff89734a8dc60882f5e6a0ce6d83492694620c4361064542ae47e69"
+        }
+      ]
+    },
+    {
+      "dataset": "honeynet34",
+      "url": "https://honeynet.onofri.org/scans/scan34/SotM34-anton.tar.gz",
+      "attribution": "Honeynet Scan of the Month 34 archive mirror",
+      "sampled": false,
+      "status": "downloaded",
+      "archive_sha256": "93c345ab7645740f579d92296531a599602feaad0005c64a2e0d3a31b7e3c72c",
+      "files": [
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/access_log",
+          "bytes": 37744,
+          "sha256": "87a8241b163c83f2a39d30a6a0ec7c190bb14f010932636805dff82ecd9ef30f"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/access_log.1",
+          "bytes": 214186,
+          "sha256": "fd75a53d32dde01c041766f07a69f70f5b8f4b3e72bb2d2e622ee4f33ce516e8"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/access_log.2",
+          "bytes": 66893,
+          "sha256": "8428f0ff51dd68440e463ed935ad8fc46cd6e7a89923a81ec61cb99e83734cf7"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/access_log.3",
+          "bytes": 37356,
+          "sha256": "d1954a16cd89f1c7606c5dcdb559fd2f693dc5da9534210f853d34a478119e1d"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/access_log.4",
+          "bytes": 27354,
+          "sha256": "71397dd7ce721de68dcc70dc21a71d39bb596567e93648d02e8ec5e766561e64"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/access_log.5",
+          "bytes": 59712,
+          "sha256": "8e5fc560a92d80ddadf6e89425cb1e7854b32b5fb6599bd130cd1d625cf4fbc1"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/access_log.6",
+          "bytes": 44492,
+          "sha256": "09e53ca56b2a8c298ae7591b4bcf751cba1e384db3edaf1f5ae42358d81ff74b"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/error_log",
+          "bytes": 32168,
+          "sha256": "8fe1bcad660958b37bbdb5278d5056625f39be95f5c089a335014409bedeb350"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/error_log.1",
+          "bytes": 149925,
+          "sha256": "1a2b4817d01b3448b0f4ad0a8e193693c9caf5eacf31dd38cdd48533bfde7380"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/error_log.2",
+          "bytes": 60521,
+          "sha256": "199a73d5bc6b16aa7732860f356cca03f0b0fac09e4c16a1498e9c1bab2240f5"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/error_log.3",
+          "bytes": 45092,
+          "sha256": "5a0cc1ac56a6ce298b6d07d659aa5eec85a2d33fb3d8bfca2adeb6527b6f0462"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/error_log.4",
+          "bytes": 21708,
+          "sha256": "4dfa80bf0e4351866b6eb80b361e494b6c092140a5a7c718afe2b9a84a6151f8"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/error_log.5",
+          "bytes": 41359,
+          "sha256": "4e5a987ac2e09d6a8f58111f767058157f90e49ee6adda951c0910e6936e2274"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/error_log.6",
+          "bytes": 31136,
+          "sha256": "3bf23f14f08d3bc9bcdb76a4b82e81c7449ba0c2b2c3c5a6151d8c5135de9a9c"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/ssl_error_log",
+          "bytes": 5895,
+          "sha256": "ee3dbc508f17697970c63882c56ac3bbb6f47fab84da7cf5a5999da5ce905901"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/ssl_error_log.1",
+          "bytes": 3382,
+          "sha256": "e6f109d338863c26d3e7f43b3b4f06a005e06817b1db64a3ab4b801725341fc6"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/ssl_error_log.2",
+          "bytes": 7412,
+          "sha256": "73fcefbf64b4b4213905486e1bfb02fe00809c551519e075bd68c02703d36d59"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/ssl_error_log.3",
+          "bytes": 8690,
+          "sha256": "f52613d50b9fb07e0f57548e82eb3184095d5d9871f755e43823cc986964c513"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/ssl_error_log.4",
+          "bytes": 5845,
+          "sha256": "04c681635d6b1449bdb9e0cc91bac17ff03d435b90f07856f7be40f4a508e47c"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/ssl_error_log.5",
+          "bytes": 8602,
+          "sha256": "944a471e9d358557dfd7e08ba050895405b0a1369f0862c75f8340a69078b05a"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/http/ssl_error_log.6",
+          "bytes": 4118,
+          "sha256": "4ef9a946ed20fe7d24cd5c29cb1d666c288da577e9fd370787970a370e95dc5b"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/iptables/iptablesyslog",
+          "bytes": 40157597,
+          "sha256": "8a26365a7d406b3ebceee08f1d44d7561d024a3a75de44163b699f4642b6dabd"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/snort/snortsyslog",
+          "bytes": 11158476,
+          "sha256": "d9a300efb513f8c96e721a0c3b9cc1db85b3dfdd8db1371c249348bb8ae27931"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/maillog",
+          "bytes": 16837,
+          "sha256": "f53aa31c47e040c92e853710252fc6dc7049361958737eac431ee8c3e9b7b6d7"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/maillog.1",
+          "bytes": 38391,
+          "sha256": "76d39f86e01a501cff9d129cb5956a432588c761ffbc79f83ffb34badadb06ea"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/maillog.2",
+          "bytes": 32619,
+          "sha256": "3d5dbad491c8b1229ed3123f82eee349300ddf41af335e7866de1cd03b9952c1"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/maillog.3",
+          "bytes": 30412,
+          "sha256": "43426899f1bd54f0502e9bf45d0fd6bffd692af3cd91fd0230992296d4696113"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/maillog.4",
+          "bytes": 15473,
+          "sha256": "c0f88f74c6a8995e0ce394ed2f417864c4b186e3c4bdd382a59578ead5449e55"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/maillog.5",
+          "bytes": 22155,
+          "sha256": "32f554abbfd2eeeb69a4369d3294f017f3d2f69ef5821d914bd7c3a7c0ebddd1"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/maillog.6",
+          "bytes": 30023,
+          "sha256": "757271f06c4a4deab4a13d468a6c2b6b5da24b027a53f4ae6746e3c6c8ab2d77"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/messages",
+          "bytes": 17496,
+          "sha256": "18f9305c5695a862b6f4cc53274b9b821a98f43bf1060e0f36a05bb97e32fe98"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/messages.1",
+          "bytes": 28634,
+          "sha256": "7d6077f7dd47e7aa6fbf8e323546e77d393aec5d2981eef6794f9e535b07aa97"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/messages.2",
+          "bytes": 17166,
+          "sha256": "891ca0e3fba1dcd45b935795210378244ea1d939028fe4a6dd69151cad9a2aa9"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/messages.3",
+          "bytes": 16375,
+          "sha256": "0140b3d886d2fb21ec3b861c145936719b0233141b303351bf140bb0b0d5923b"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/messages.4",
+          "bytes": 25236,
+          "sha256": "600c8fbcb15b55e466e1c827c3cee5d218144850c3a7a4a54f7f540f89606989"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/messages.5",
+          "bytes": 18606,
+          "sha256": "7c9db8b3894f15dd7a1fe433292cab857a5eeb6fcbb50a0049447c4819305631"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/messages.6",
+          "bytes": 26739,
+          "sha256": "a8eb94028e315667ad54ab2b672f333f5488e54e43e1f0ae60493926e281cf5e"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/secure",
+          "bytes": 15157,
+          "sha256": "b59370d15d6a5b636325ac831f3c90234f349d92da4069334a9571c37b1cc061"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/secure.1",
+          "bytes": 21443,
+          "sha256": "6eb76045d5ef7316116bf5cfbacb1330dab4d33babe683bf5ae29e78e04f147c"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/secure.2",
+          "bytes": 22553,
+          "sha256": "15fa19abd0cbae31eb265b51eec1d533368db147ee448e199bb489188f85b731"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/secure.3",
+          "bytes": 14311,
+          "sha256": "7940dfd1fa2289b3612013410e54e90d60d39820be9ae9bec986f57682d01979"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/secure.4",
+          "bytes": 19803,
+          "sha256": "e443029072073b3204d700d40132172f00c1360b7158b92e3c67b8fe39046080"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/secure.5",
+          "bytes": 7891,
+          "sha256": "a3ffe09a73c99777b0d5de7f2dde870989f99262ee1376b6800b1968d08149a2"
+        },
+        {
+          "path": "data/datasets/honeynet34/extracted/SotM34/syslog/secure.6",
+          "bytes": 40969,
+          "sha256": "bddcedc5cc19705de422171c6a9fe387e5f41f7dad032640c69e93c2309290ed"
+        }
+      ]
+    },
+    {
+      "dataset": "maccdc2012",
+      "url": "https://www.secrepo.com/maccdc2012/conn.log.gz",
+      "attribution": "SecRepo MACCDC 2012 connection log; see source attribution/terms",
+      "sampled": false,
+      "status": "downloaded",
+      "archive_sha256": "d438300b4b004dfdf702acbc3b3017cb26fe442a26ade3bee35b73f860f1a51d",
+      "files": [
+        {
+          "path": "data/datasets/maccdc2012/extracted/capture.log",
+          "bytes": 2718866065,
+          "sha256": "4dac69f602643844f1f5a71c9a0efcb4e5adbe0527ca2a7556895155150a8e1e"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "health": true,
+  "authenticated_ingestion": true,
+  "exact_raw_bytes": true,
+  "tcp_udp_received": true,
+  "proof_verified_after_restart": true,
+  "user": "65532:65532",
+  "read_only_root": true,
+  "scope": "Local Docker engine; fresh synthetic test data. Not a physical firewall test, Linux host test or CI result."
+}

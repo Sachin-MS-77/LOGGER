@@ -1,0 +1,206 @@
+{
+  "platform": "macOS-26.3-arm64-arm-64bit-Mach-O",
+  "python": "3.14.0",
+  "scope": "Actual isolated application + SQLite FULL + real loopback sockets, concurrent senders and background sealing; synthetic fixed-format events. Same machine sender and receiver. Offered rate may be throttled by TCP backpressure. No real-device or distributed capacity claim.",
+  "runs": [
+    {
+      "transport": "tcp",
+      "offered_eps": 2000,
+      "duration_seconds": 120,
+      "connections": 4,
+      "sent": 174398,
+      "actual_sent_eps": 1453.32,
+      "durably_received_in_window": 132402,
+      "live_socket_eps": 1103.35,
+      "received_after_drain": 141346,
+      "drain_seconds_limit": 15,
+      "not_received_after_drain": 33052,
+      "unreceived_percent": 18.9521,
+      "senders": [
+        {
+          "connection": 0,
+          "sent": 46071,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.07
+        },
+        {
+          "connection": 1,
+          "sent": 46218,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.035
+        },
+        {
+          "connection": 2,
+          "sent": 41020,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.038
+        },
+        {
+          "connection": 3,
+          "sent": 41089,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.045
+        }
+      ],
+      "statuses": {
+        "normalized": 141352,
+        "queued": 3
+      },
+      "arithmetic_events_per_day": 95329440,
+      "day_projection_note": "Arithmetic only from this short run; no 24-hour measurement."
+    },
+    {
+      "transport": "tcp",
+      "offered_eps": 4000,
+      "duration_seconds": 120,
+      "connections": 4,
+      "sent": 154256,
+      "actual_sent_eps": 1285.47,
+      "durably_received_in_window": 115753,
+      "live_socket_eps": 964.61,
+      "received_after_drain": 134204,
+      "drain_seconds_limit": 15,
+      "not_received_after_drain": 20052,
+      "unreceived_percent": 12.9992,
+      "senders": [
+        {
+          "connection": 0,
+          "sent": 36215,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.003
+        },
+        {
+          "connection": 1,
+          "sent": 39696,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.001
+        },
+        {
+          "connection": 2,
+          "sent": 39068,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.003
+        },
+        {
+          "connection": 3,
+          "sent": 39277,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.003
+        }
+      ],
+      "statuses": {
+        "normalized": 134212,
+        "queued": 1
+      },
+      "arithmetic_events_per_day": 83342160,
+      "day_projection_note": "Arithmetic only from this short run; no 24-hour measurement."
+    },
+    {
+      "transport": "tcp",
+      "offered_eps": 8000,
+      "duration_seconds": 120,
+      "connections": 4,
+      "sent": 175486,
+      "actual_sent_eps": 1462.38,
+      "durably_received_in_window": 129907,
+      "live_socket_eps": 1082.56,
+      "received_after_drain": 147146,
+      "drain_seconds_limit": 15,
+      "not_received_after_drain": 28340,
+      "unreceived_percent": 16.1494,
+      "senders": [
+        {
+          "connection": 0,
+          "sent": 43843,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.012
+        },
+        {
+          "connection": 1,
+          "sent": 43267,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.005
+        },
+        {
+          "connection": 2,
+          "sent": 44783,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.002
+        },
+        {
+          "connection": 3,
+          "sent": 43593,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.006
+        }
+      ],
+      "statuses": {
+        "normalized": 147149,
+        "queued": 1
+      },
+      "arithmetic_events_per_day": 93533040,
+      "day_projection_note": "Arithmetic only from this short run; no 24-hour measurement."
+    },
+    {
+      "transport": "tcp",
+      "offered_eps": 16000,
+      "duration_seconds": 120,
+      "connections": 4,
+      "sent": 199050,
+      "actual_sent_eps": 1658.75,
+      "durably_received_in_window": 147914,
+      "live_socket_eps": 1232.62,
+      "received_after_drain": 165907,
+      "drain_seconds_limit": 15,
+      "not_received_after_drain": 33143,
+      "unreceived_percent": 16.6506,
+      "senders": [
+        {
+          "connection": 0,
+          "sent": 48878,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.002
+        },
+        {
+          "connection": 1,
+          "sent": 50706,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.002
+        },
+        {
+          "connection": 2,
+          "sent": 50706,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.001
+        },
+        {
+          "connection": 3,
+          "sent": 48760,
+          "send_errors": 1,
+          "uncertain_last_frame": 1,
+          "active_seconds": 120.002
+        }
+      ],
+      "statuses": {
+        "normalized": 165908
+      },
+      "arithmetic_events_per_day": 106498080,
+      "day_projection_note": "Arithmetic only from this short run; no 24-hour measurement."
+    }
+  ]
+}

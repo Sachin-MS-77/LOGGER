@@ -137,3 +137,13 @@ def test_fixture_scenario_routes_all_events(store):
     assert store.stats()['normalized']==40
     assert store.stats()['statuses']['unparsed']==10
     assert all(e['mode']=='replay' for e in store.events(limit=100)['items'])
+
+def test_iptables_repeated_inner_packet_preserved_without_overwriting_outer(store,source):
+    raw=b'Feb  1 00:00:02 bridge kernel: INBOUND ICMP: IN=br0 OUT=br0 SRC=192.0.2.1 DST=198.51.100.2 LEN=96 PROTO=ICMP TYPE=3 CODE=3 SRC=198.51.100.2 DST=192.0.2.1 LEN=60 PROTO=TCP SPT=5000 DPT=80'
+    eid=store.ingest(raw,source['id']);e=store.event(eid)
+    assert e['normalized']['source_ip']=='192.0.2.1'
+    assert e['normalized']['protocol']=='icmp'
+    assert e['normalized']['source_port'] is None and e['normalized']['destination_port'] is None
+    assert e['normalized']['action']=='unknown'
+    assert e['normalized']['unmapped']['repeated.SRC.2']=='198.51.100.2'
+    assert store.event(eid,raw=True)['raw']==raw

@@ -1,0 +1,33 @@
+# Local integration lab only. Services are reachable only on loopback.
+# This demonstrates a broker + workers + columnar store, not a replicated cluster.
+services:
+  redpanda:
+    image: redpandadata/redpanda:v24.3.12
+    command:
+      - redpanda
+      - start
+      - --mode=dev-container
+      - --smp=1
+      - --memory=512M
+      - --reserve-memory=0M
+      - --overprovisioned
+      - --node-id=0
+      - --kafka-addr=0.0.0.0:9092
+      - --advertise-kafka-addr=redpanda:9092
+      - --pandaproxy-addr=0.0.0.0:8082
+      - --advertise-pandaproxy-addr=127.0.0.1:18082
+    ports: ["127.0.0.1:18082:8082"]
+    volumes: ["broker-data:/var/lib/redpanda/data"]
+    mem_limit: 768m
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.3
+    ports: ["127.0.0.1:18123:8123"]
+    environment:
+      CLICKHOUSE_USER: logflux
+      CLICKHOUSE_PASSWORD: ${LOGFLUX_LAB_PASSWORD:?Set a private lab password}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
+    volumes: ["columnar-data:/var/lib/clickhouse"]
+    mem_limit: 1g
+volumes:
+  broker-data:
+  columnar-data:

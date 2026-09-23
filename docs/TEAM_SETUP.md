@@ -1,5 +1,14 @@
 # Teammate quick start
 
+## Team
+
+| Name | Role |
+|---|---|
+| **Praveena R K** | Team Lead · Architecture & System Design |
+| **Sachin M** | Backend Developer · Security, Integrity & API |
+| **Pavithra S** | Frontend Developer · UI/UX & Dashboard |
+| **Madhusree S** | Data Pipeline · Parser Development & Testing |
+
 Clone the repository or use GitHub's **Code → Download ZIP**, then extract it.
 
 ```sh
@@ -31,7 +40,7 @@ py -3 -m venv .venv
 3. Choose **Command center → Run demo replay** to populate the fresh database with labeled synthetic events.
 4. Explore Event stream, Parser lab, Evidence vault and Investigation. Use **Obsidian** for the dark violet dashboard, or **Pearl** / **Rose** in the theme selector.
 
-The dashboard and core workflow need no frontend build, cloud account or local language model. Manual parser review works immediately. For optional local AI, real-device connections, offline deployment and Docker instructions, see [README](../README.md). Docker execution and Windows/Linux installations have not been validated on the build machine.
+The dashboard and core workflow need no frontend build, cloud account or local language model. Manual parser review works immediately. For optional local AI, real-device connections, offline deployment and Docker instructions, see [README](../README.md). Docker build and local container acceptance passed; native Windows installation verification remains pending. See INTEGRATIONS.md for the optional experiments.
 
 ## Run the tests
 
@@ -46,8 +55,8 @@ On Windows, use `.venv\Scripts\python.exe -m pytest tests -q`.
 ## Submission assets
 
 - `docs/architecture.pdf`: two-page architecture
-- `docs/LOGFLUX-SIH-final.pptx`: five-slide presentation
-- `docs/LOGFLUX-demo.mp4`: 60-second screenshot walkthrough with selectable captions
+- `docs/LOGFLUX-final.pptx`: presentation slides
+- `docs/LOGFLUX-demo.mp4`: two-minute presentation and live application recording with visible captions, no narration audio
 - `docs/FEATURES.md`: implementation coverage and remaining work
 
 No preloaded operational database, private signing keys, access tokens or local model weights are included. A fresh installation creates its own local data. Device logging must be configured explicitly; the synthetic demonstration is not evidence of physical hardware compatibility.

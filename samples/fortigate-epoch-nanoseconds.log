@@ -1,0 +1,1 @@
+devname="LAB" devid="LAB" logid="0000000013" eventtime=1557191442762142681 srcip=192.0.2.10 dstip=198.51.100.20 srcport=5000 dstport=443 proto=6 action=accept level=information

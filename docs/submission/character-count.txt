@@ -1,0 +1,1 @@
+Idea description: 40,000 Unicode characters, including spaces and internal line breaks. UTF-8 plain text, LF newlines, no trailing newline. Title is separate.

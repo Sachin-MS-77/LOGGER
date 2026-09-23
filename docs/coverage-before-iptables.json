@@ -1,0 +1,114 @@
+{
+  "scope": "Full-file dry-run of built-in decoding/mapping/normalization. Never drops errors.\nFresh registry baseline: no learned plugins, drift history, storage or LLM. Unknown\nrecords are discovery-eligible; this command does not approve or deploy parsers.\n",
+  "files": [
+    {
+      "file": "data/datasets/linux/extracted/Linux.log",
+      "sha256_uncompressed": "b541078328bf5402c254e7e8971a95963c464858031889ff6e15b6d1a857d490",
+      "physical_lines": 25567,
+      "metadata_lines": 0,
+      "records": 25567,
+      "normalized": 0,
+      "partial": 0,
+      "discovery": 25547,
+      "failed": 20,
+      "normalized_percent": 0.0,
+      "partial_percent": 0.0,
+      "discovery_percent": 99.9218,
+      "failed_percent": 0.0782,
+      "error_types": {
+        "UnicodeDecodeError": 20
+      },
+      "seconds": 0.334
+    },
+    {
+      "file": "data/datasets/apache/extracted/Apache.log",
+      "sha256_uncompressed": "23e616a1ed529bab9b20b9bc345d37035061eee971d246102bcc4937e51a039b",
+      "physical_lines": 56482,
+      "metadata_lines": 0,
+      "records": 56482,
+      "normalized": 0,
+      "partial": 0,
+      "discovery": 56482,
+      "failed": 0,
+      "normalized_percent": 0.0,
+      "partial_percent": 0.0,
+      "discovery_percent": 100.0,
+      "failed_percent": 0.0,
+      "error_types": {},
+      "seconds": 0.802
+    },
+    {
+      "file": "data/datasets/openssh/extracted/SSH.log",
+      "sha256_uncompressed": "89eee9e36c182722f9fadc6e5617a4818ffc66109e7e222b8f9e8b78fc3aa2f3",
+      "physical_lines": 655147,
+      "metadata_lines": 0,
+      "records": 655147,
+      "normalized": 0,
+      "partial": 0,
+      "discovery": 655147,
+      "failed": 0,
+      "normalized_percent": 0.0,
+      "partial_percent": 0.0,
+      "discovery_percent": 100.0,
+      "failed_percent": 0.0,
+      "error_types": {},
+      "seconds": 10.419
+    },
+    {
+      "file": "data/datasets/honeynet30/extracted/capture.log",
+      "sha256_uncompressed": "765f70f3fff89734a8dc60882f5e6a0ce6d83492694620c4361064542ae47e69",
+      "physical_lines": 307524,
+      "metadata_lines": 0,
+      "records": 307524,
+      "normalized": 0,
+      "partial": 0,
+      "discovery": 246350,
+      "failed": 61174,
+      "normalized_percent": 0.0,
+      "partial_percent": 0.0,
+      "discovery_percent": 80.1076,
+      "failed_percent": 19.8924,
+      "error_types": {
+        "ValueError": 61174
+      },
+      "seconds": 4.378
+    },
+    {
+      "file": "data/datasets/honeynet34/extracted/SotM34/iptables/iptablesyslog",
+      "sha256_uncompressed": "8a26365a7d406b3ebceee08f1d44d7561d024a3a75de44163b699f4642b6dabd",
+      "physical_lines": 179752,
+      "metadata_lines": 0,
+      "records": 179752,
+      "normalized": 0,
+      "partial": 0,
+      "discovery": 162483,
+      "failed": 17269,
+      "normalized_percent": 0.0,
+      "partial_percent": 0.0,
+      "discovery_percent": 90.3929,
+      "failed_percent": 9.6071,
+      "error_types": {
+        "ValueError": 17269
+      },
+      "seconds": 2.726
+    },
+    {
+      "file": "data/datasets/honeynet34/extracted/SotM34/snort/snortsyslog",
+      "sha256_uncompressed": "d9a300efb513f8c96e721a0c3b9cc1db85b3dfdd8db1371c249348bb8ae27931",
+      "physical_lines": 69039,
+      "metadata_lines": 0,
+      "records": 69039,
+      "normalized": 0,
+      "partial": 0,
+      "discovery": 69039,
+      "failed": 0,
+      "normalized_percent": 0.0,
+      "partial_percent": 0.0,
+      "discovery_percent": 100.0,
+      "failed_percent": 0.0,
+      "error_types": {},
+      "seconds": 1.542
+    }
+  ],
+  "unavailable_datasets": []
+}
