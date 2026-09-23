@@ -1,15 +1,13 @@
 # Teammate quick start
 
-## Team roster
+## Team
 
-| Name | Role | SIH Registration ID |
-|---|---|---|
-| Sachin M | Lead Developer · Backend & Security | PS-26156-001 |
-| *(Add teammate)* | *(Role)* | *(ID)* |
-| *(Add teammate)* | *(Role)* | *(ID)* |
-| *(Add teammate)* | *(Role)* | *(ID)* |
-
-Institution: *(Your college name)* · Team code: *(SIH team code)*
+| Name | Role |
+|---|---|
+| **Praveena R K** | Team Lead · Architecture & System Design |
+| **Sachin M** | Backend Developer · Security, Integrity & API |
+| **Pavithra S** | Frontend Developer · UI/UX & Dashboard |
+| **Madhusree S** | Data Pipeline · Parser Development & Testing |
 
 Clone the repository or use GitHub's **Code → Download ZIP**, then extract it.
 
@@ -57,7 +55,7 @@ On Windows, use `.venv\Scripts\python.exe -m pytest tests -q`.
 ## Submission assets
 
 - `docs/architecture.pdf`: two-page architecture
-- `docs/LOGFLUX-SIH-final.pptx`: five-slide presentation
+- `docs/LOGFLUX-final.pptx`: five-slide presentation
 - `docs/LOGFLUX-demo.mp4`: 60-second screenshot walkthrough with selectable captions
 - `docs/FEATURES.md`: implementation coverage and remaining work
 

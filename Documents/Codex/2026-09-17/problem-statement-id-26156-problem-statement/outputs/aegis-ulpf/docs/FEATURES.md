@@ -1,8 +1,8 @@
-# Requirement and original-plan coverage
+# Requirement and implementation coverage
 
-Updated review: 21 September 2026. See [verification report](VERIFICATION.md) for the current 54-test run. Status describes shipped behavior, not future intent.
+Updated review: 23 September 2026. Status describes shipped behavior, not future intent.
 
-## SIH requirements
+## Functional requirements
 
 | Requirement | Implementation and evidence | Boundary |
 |---|---|---|

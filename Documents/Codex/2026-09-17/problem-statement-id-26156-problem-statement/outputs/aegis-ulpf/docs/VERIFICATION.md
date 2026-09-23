@@ -1,6 +1,6 @@
 # LOGFLUX verification — 21 September 2026
 
-Reviewed the local application against Claude's remote commits through `7d1e2a1`. The application source matched the version on `origin/master`. GitHub's default branch was still `main`, pointing at the older AEGIS release.
+Reviewed the local application against Claude's remote commits through `7d1e2a1`. The application source matched the version on `origin/master`. GitHub's default branch was still `main`, pointing at the older release.
 
 ## Changes preserved
 

@@ -1,6 +1,6 @@
 # LOGFLUX
 
-**Universal Log Intelligence · SIH Problem Statement 26156 · NTRO**
+**Universal Log Intelligence Platform — Cybersecurity & Blockchain Track**
 
 An offline-capable cybersecurity workspace for collecting perimeter logs, reviewing new parsers, and tracing normalized events back to original evidence.
 
@@ -30,14 +30,12 @@ The default **Obsidian** theme uses violet accents on dark surfaces; **Pearl** a
 
 ## Team
 
-| Name | Role | SIH Registration ID |
-|---|---|---|
-| Sachin M | Lead Developer · Backend & Security | PS-26156-001 |
-| *(Add teammate)* | *(Role)* | *(ID)* |
-| *(Add teammate)* | *(Role)* | *(ID)* |
-| *(Add teammate)* | *(Role)* | *(ID)* |
-
-Institution: *(Your college name)* · Team code: *(SIH team code)*
+| Name | Role |
+|---|---|
+| **Praveena R K** | Team Lead · Architecture & System Design |
+| **Sachin M** | Backend Developer · Security, Integrity & API |
+| **Pavithra S** | Frontend Developer · UI/UX & Dashboard |
+| **Madhusree S** | Data Pipeline · Parser Development & Testing |
 
 ## Start
 
@@ -206,14 +204,14 @@ The prototype uses a single SQLite node. There is no Kafka/Flink cluster, object
 
 ## Upgrading an earlier checkout
 
-Back up the private data directory before changing versions. Keep the same data path to retain evidence, cases and signing keys. `LOGFLUX_*` environment variables are preferred; legacy `AEGIS_*` variables remain supported as fallbacks. New variables take priority. Renamed schemas do not rewrite stored revisions or old signed parser payloads; imports accept only the current schema and the exact compatible pre-rename schema hash.
+Back up the private data directory before changing versions. Keep the same data path to retain evidence, cases and signing keys. `LOGFLUX_*` environment variables are used; legacy variable names remain supported as fallbacks. New variables take priority. Renamed schemas do not rewrite stored revisions or old signed parser payloads; imports accept only the current schema and the exact compatible pre-rename schema hash.
 
 New ECS projections use the `logflux` extension key and metrics use the `logflux_` prefix. Update downstream dashboards/adapters that used the old names. New browser sessions require the existing server token again. Older Docker volumes must be explicitly retained or mounted at `/var/lib/logflux`; changing a Compose project/service name does not migrate data automatically.
 
 ## Submission files
 
 - `docs/architecture.pdf` — two pages
-- `docs/LOGFLUX-SIH-final.pptx` — existing presentation; review branding/screenshots before submission
+- `docs/LOGFLUX-final.pptx` — five-slide presentation deck
 - `docs/LOGFLUX-demo.mp4` — 60-second screenshot walkthrough with selectable English captions, no audio
 - `docs/demo-script.md` — 30-second PPT + 90-second live demo script
 - `docs/FEATURES.md` — requirements and original-plan coverage
