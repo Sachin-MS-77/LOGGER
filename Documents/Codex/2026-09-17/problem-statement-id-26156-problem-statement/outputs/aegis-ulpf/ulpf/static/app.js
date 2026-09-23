@@ -460,7 +460,7 @@ function investigationRisk(g) {
   ];
   const totalScore=Math.round(parts.reduce((s,p)=>s+p.value,0)/4);
   const r=54; const cx=70; const cy=62; const circ=2*Math.PI*r;
-  const gaugeColor=totalScore>66?"#fb7185":totalScore>33?"#fbbf24":"#a78bfa";
+  const gaugeColor="#a78bfa";
   const gaugeSvg=`<div class="risk-gauge"><div class="risk-gauge-wrap" style="width:140px;height:78px">
     <svg width="140" height="78" viewBox="0 0 140 78" overflow="visible">
       <path d="M ${cx-r},${cy} A ${r},${r} 0 0,1 ${cx+r},${cy}" fill="none" stroke="#1e1b38" stroke-width="9" stroke-linecap="round"/>
@@ -473,9 +473,9 @@ function investigationRisk(g) {
       <small>/ 100</small>
     </div>
   </div></div>`;
-  return panel("Fracture Index · Investigation Risk",
-    `${gaugeSvg}<div class="risk-breakdown">${parts.map(p=>`<div class="risk-part"><div><span>${p.label}</span><strong>${p.value > 0 ? p.value : "—"}</strong></div><div class="risk-bar"><span style="width:${p.value}%;background:linear-gradient(90deg,${p.color}80,${p.color})"></span></div><p>${p.note}</p></div>`).join("")}</div><div class="table-footer"><span>Descriptive signals only · no trained risk model</span></div>`,
-    badge("PROTOTYPE","amber"));
+  return panel("Fracture Index · Activity heuristic",
+    `${gaugeSvg}<p class="graph-note">Formula: [min(8 × deny/alert events, 100) + min(5 × source timestamps, 100) + min(6 × destinations, 100)] / 4. Counts rise with traffic volume; this is not validated detection accuracy.</p><div class="risk-breakdown">${parts.map(p=>`<div class="risk-part"><div><span>${p.label}</span><strong>${p.label === "Taint" ? "N/A" : p.value}</strong></div><div class="risk-bar"><span style="width:${p.value}%;background:linear-gradient(90deg,${p.color}80,${p.color})"></span></div><p>${p.note}</p></div>`).join("")}</div><div class="table-footer"><span>Uncalibrated activity score · not threat probability. Taint is missing; formula maximum is 75.</span></div>`,
+    badge("UNCALIBRATED","amber"));
 }
 async function investigatePage() {
   const [g, alerts, cases] = await Promise.all([

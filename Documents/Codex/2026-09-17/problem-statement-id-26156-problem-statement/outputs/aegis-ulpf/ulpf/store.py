@@ -16,7 +16,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from drain3 import TemplateMiner
 from drain3.template_miner_config import TemplateMinerConfig
-from .schema import canonical, digest, utcnow, normalize, SCHEMA_HASH
+from .schema import canonical, digest, utcnow, normalize, SCHEMA_HASH, COMPATIBLE_SCHEMA_HASHES
 from .parsers import decode, suggest_mapping, built_in_mapping
 from .integrity import SigningKey, WitnessLedger, merkle, leaf_hash, verify_proof, verify_signature, b64, unb64
 from .sandbox import Sandbox
@@ -312,7 +312,7 @@ class Store:
     def import_plugin(self, bundle):
         payload = bundle["payload"]
         verify_signature(payload,bundle["signature"],[self.signer.public]+self.extra_trusted_keys())
-        if payload["schema_hash"] != SCHEMA_HASH: raise ValueError("plugin schema differs from this runtime")
+        if payload["schema_hash"] not in COMPATIBLE_SCHEMA_HASHES: raise ValueError("plugin schema differs from this runtime")
         binary = unb64(payload["wasm"])
         if digest(binary) != payload["wasm_sha256"]: raise ValueError("binary hash mismatch")
         if not payload.get("test_vectors"): raise ValueError("bundle has no test vectors")
@@ -462,7 +462,7 @@ class Store:
         revisions = self.rows("SELECT id,version,parser,status,created_at FROM revisions WHERE event_id=? ORDER BY version",(eid,))
         alerts = self.rows("SELECT * FROM alerts WHERE event_id=?",(eid,))
         cases = [c for c in self.rows("SELECT * FROM cases") if eid in json.loads(c["event_ids"])]
-        return {"raw":{"id":eid,"hash":row["raw_hash"],"received_at":row["received_at"]},"source":row["source"],"schema_hash":SCHEMA_HASH,"revisions":revisions,"alerts":alerts,"cases":cases}
+        return {"raw":{"id":eid,"hash":row["raw_hash"],"received_at":row["received_at"]},"source":row["source"],"schema_hash":(row["normalized"] or {}).get("schema_hash"),"runtime_schema_hash":SCHEMA_HASH,"revisions":revisions,"alerts":alerts,"cases":cases}
 
     def recover(self):
         for row in self.rows("SELECT id FROM events WHERE status='queued'"): self.process(row["id"])

@@ -7,20 +7,20 @@ import httpx
 from .schema import SCHEMA, normalize, utcnow
 
 def headers():
-    key=os.getenv("LOGFLUX_LLM_API_KEY", os.getenv("LOGFLUX_LLM_API_KEY",""))
-    path=os.getenv("LOGFLUX_LLM_API_KEY_FILE", os.getenv("LOGFLUX_LLM_API_KEY_FILE"))
+    key=os.getenv("LOGFLUX_LLM_API_KEY", os.getenv("AEGIS_LLM_API_KEY",""))
+    path=os.getenv("LOGFLUX_LLM_API_KEY_FILE", os.getenv("AEGIS_LLM_API_KEY_FILE"))
     if path: key=Path(path).read_text().strip()
     return {"Authorization":"Bearer "+key} if key else {}
 
 def settings():
-    endpoint=os.getenv("LOGFLUX_LLM_URL", os.getenv("LOGFLUX_LLM_URL","http://127.0.0.1:11434")).rstrip("/")
+    endpoint=os.getenv("LOGFLUX_LLM_URL", os.getenv("AEGIS_LLM_URL","http://127.0.0.1:11434")).rstrip("/")
     # External cloud endpoints are intentionally excluded from this air-gap build.
     parsed=urlparse(endpoint)
     allowed={"127.0.0.1","localhost","::1","ollama"}
-    allowed.update(x.strip() for x in os.getenv("LOGFLUX_LLM_ALLOWED_HOSTS", os.getenv("LOGFLUX_LLM_ALLOWED_HOSTS","")).split(",") if x.strip())
+    allowed.update(x.strip() for x in os.getenv("LOGFLUX_LLM_ALLOWED_HOSTS", os.getenv("AEGIS_LLM_ALLOWED_HOSTS","")).split(",") if x.strip())
     if parsed.hostname not in allowed or parsed.scheme not in ("http","https"):
         raise ValueError("LLM endpoint must be a configured local-network host")
-    return endpoint,os.getenv("LOGFLUX_LLM_MODEL", os.getenv("LOGFLUX_LLM_MODEL","qwen3:0.6b"))
+    return endpoint,os.getenv("LOGFLUX_LLM_MODEL", os.getenv("AEGIS_LLM_MODEL","qwen3:0.6b"))
 
 def status():
     endpoint,model=settings()
