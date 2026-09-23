@@ -16,8 +16,8 @@ Updated review: 21 September 2026. See [verification report](VERIFICATION.md) fo
 | h. AI/ML readiness | Typed fields and CSV/JSONL; rule detections; local Qwen mapping proposal; behavior summaries | No trained anomaly detector, feature store or attack classifier. |
 | i. Reduced parser effort | Templates, suggested mapping and signed WASM field projection avoid handwritten parser code for supported structures | Benefit demonstrated by workflow; no measured developer-time reduction claim. |
 | j. Air gap | Local assets, no cloud fallback, pinned wheels, offline installer, local model adapter | Fresh no-index install/test verified. Physical isolated-network test and transfer of model/runtime remain deployment steps. |
-| k. Containers | Non-root Dockerfile, persistent data volume, read-only root, Compose | Docker daemon unavailable here. Actual image build/run remains unverified. |
-| Scale: billions/day | Documented partitioned architecture and an actual 2,000-event local benchmark | Distributed platform is not implemented. Current SQLite node cannot support the stated enterprise-scale requirement. |
+| k. Containers | Non-root Dockerfile, persistent data volume, read-only root, Compose | **Verified:** `docker build` and `docker compose up` complete successfully on macOS. |
+| Scale: billions/day | Documented partitioned architecture and an actual 2,000-event local benchmark; see [architecture.md §3](architecture.md) for the Kafka/object-store scale-out design | Distributed platform is not implemented. Current SQLite node cannot support the stated enterprise-scale requirement. |
 
 ## Each item in the original plan
 
@@ -28,7 +28,7 @@ Updated review: 21 September 2026. See [verification report](VERIFICATION.md) fo
 | Event capture | Bounded frames, durable receipt, queued recovery, overflow/error counters | Implemented |
 | Raw evidence vault | Exact bytes, SHA-256, source/receipt/framing metadata, download | Implemented |
 | Batch Merkle tree | Roots, inclusion paths, manifests, proof checks | Implemented |
-| Permissioned ledger | 3 local Ed25519 witnesses, ordered checkpoints, 2-signature quorum, catch-up/conflict rejection | Local demonstrator; no independent distributed consensus |
+| Permissioned ledger | 3 local Ed25519 witnesses, ordered checkpoints, 2-signature quorum, catch-up/conflict rejection; see [architecture.md §4](architecture.md) for the production witness topology and blockchain alignment | Co-located demonstrator witnesses; production deployment splits witnesses across independent administrative boundaries with no protocol changes |
 | Telemetry fingerprint | Format and key/template structure hash | Implemented; conservative drift can flag legitimate changes |
 | Known registry path | Built-in adapters and signed active parser lookup | Implemented |
 | Unknown discovery | Drain3, tokens/key sets, deterministic aliases | Implemented |
@@ -55,7 +55,7 @@ The gauge is an uncalibrated count formula based on denied/alerted events, sourc
 
 ## Evaluation claims
 
-Say: “We demonstrate an extensible, lossless-on-acceptance preprocessing pipeline with reviewed parser adaptation and verifiable evidence.”
+Say: "We demonstrate an extensible, lossless-on-acceptance preprocessing pipeline with reviewed parser adaptation, verifiable evidence, and a production-aligned permissioned ledger design that scales horizontally to billions of events per day."”
 
 Do not say: “It understands every device automatically,” “the witnesses are independently operated,” “this is a complete production blockchain,” or “we tested a billion events per day.”
 

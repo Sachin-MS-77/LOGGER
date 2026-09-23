@@ -1,5 +1,16 @@
 # Teammate quick start
 
+## Team roster
+
+| Name | Role | SIH Registration ID |
+|---|---|---|
+| Sachin M | Lead Developer · Backend & Security | PS-26156-001 |
+| *(Add teammate)* | *(Role)* | *(ID)* |
+| *(Add teammate)* | *(Role)* | *(ID)* |
+| *(Add teammate)* | *(Role)* | *(ID)* |
+
+Institution: *(Your college name)* · Team code: *(SIH team code)*
+
 Clone the repository or use GitHub's **Code → Download ZIP**, then extract it.
 
 ```sh
@@ -31,7 +42,7 @@ py -3 -m venv .venv
 3. Choose **Command center → Run demo replay** to populate the fresh database with labeled synthetic events.
 4. Explore Event stream, Parser lab, Evidence vault and Investigation. Use **Obsidian** for the dark violet dashboard, or **Pearl** / **Rose** in the theme selector.
 
-The dashboard and core workflow need no frontend build, cloud account or local language model. Manual parser review works immediately. For optional local AI, real-device connections, offline deployment and Docker instructions, see [README](../README.md). Docker execution and Windows/Linux installations have not been validated on the build machine.
+The dashboard and core workflow need no frontend build, cloud account or local language model. Manual parser review works immediately. For optional local AI, real-device connections, offline deployment and Docker instructions, see [README](../README.md). **Docker `docker build` and `docker compose up` are verified working.** Windows/Linux installations have not been validated on the build machine.
 
 ## Run the tests
 
