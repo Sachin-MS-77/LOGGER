@@ -162,12 +162,13 @@ Four Redpanda partitions → independent Python workers → ClickHouse, with dur
 | 1 / 4 | 3,003.40 | 1.833 |
 | 2 / 4 | 4,571.08 | 1.5245 |
 | 4 / 4 | 4,222.39 | 1.5668 |
-| 8 / 8 | **6,017.02** | 6.4445 |
+| 8 / 8 | 6,017.02 | 6.4445 |
+| 16 / 16 | **7,018.75** | 12.4194 |
 
 
 Worker-path timing includes process startup, broker reading, normalization, batch proofs, insertion and offset commits. Producer timing is separate; final verification and root aggregation are excluded. Two workers outperformed four in this small run: scaling is **not linear**. These short trials are not sustained capacity results.
 
-The experiment is separate from the SQLite dashboard and its parser registry. It has one broker and one columnar node, static partition assignment, no replication or automatic failover. [Run it](docs/INTEGRATIONS.md). The 8-worker result is recorded in [scale-benchmark-8x8.json](docs/scale-benchmark-8x8.json); its raw hashes, shard proofs and resume behavior passed. The four-worker aggregate root was signed in the [network witness test](docs/witness-verification.json).
+The experiment is separate from the SQLite dashboard and its parser registry. It has one broker and one columnar node, static partition assignment, no replication or automatic failover. [Run it](docs/INTEGRATIONS.md). The 8-worker result is recorded in [scale-benchmark-8x8.json](docs/scale-benchmark-8x8.json), and the streamed 16-worker result is recorded in [scale-benchmark-16x16-streamed.json](docs/scale-benchmark-16x16-streamed.json); raw hashes, shard proofs and resume behavior passed. The four-worker aggregate root was signed in the [network witness test](docs/witness-verification.json).
 
 ## Requirements a-k
 

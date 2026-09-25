@@ -6,7 +6,7 @@ The project has two deliberately separate data paths. The UI replay and throughp
 
 | Concern | Current evidence | Boundary that remains |
 |---|---|---|
-| Throughput | The sequential Store baseline is 2,187.8 events/s. The live collector has 120-second TCP/UDP/TLS runs, and the separate four-partition worker lab measured 3,003 / 4,571 / 4,222 events/s for 1/2/4 workers. | These are different scopes. They are not a billion-events/day or 24-hour capacity certification. |
+| Throughput | The sequential Store baseline is 2,187.8 events/s. The separate streamed 16-partition/16-worker lab measured **7,018.75 events/s** with raw hashes, proofs and resume checks passing. | These are different scopes. They are not a billion-events/day or 24-hour capacity certification. |
 | Real data | `docs/coverage.json` records full-file scans for Linux, Apache, OpenSSH, Honeynet 30/34 and MACCDC 2012. | Coverage is adapter coverage, not detection accuracy; unsupported formats remain visible. |
 | Real socket replay | `python scripts/send_logs.py <capture> --transport tcp --rate 100` streams an existing capture without rewriting bytes. | The receiving machine and device-specific acceptance still need to be chosen for a physical trial. |
 | Docker | `docs/docker-verification.json` records local build, health, authenticated ingestion, exact raw bytes, TCP/UDP receipt and proof after restart. | Hosted Actions is pending because the available token cannot create workflows. |

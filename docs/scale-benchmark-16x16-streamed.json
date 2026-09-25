@@ -1,0 +1,15 @@
+{
+  "run_id": "ac153f8e3ed94cdcbfc9eaa6b63f7594",
+  "events": 20000,
+  "workers": 16,
+  "partitions": 16,
+  "seconds": 2.8495,
+  "events_per_second": 7018.75,
+  "producer_seconds": 9.5698,
+  "end_to_end_seconds": 12.4194,
+  "all_raw_hashes_verified": true,
+  "all_shard_proofs_verified": true,
+  "resume_no_duplicates": true,
+  "status_counts": {"normalized": 16000, "unparsed": 4000},
+  "scope": "Local 16-partition Redpanda broker, separate Python workers, one ClickHouse node, streamed verification. No HA or automatic rebalancing claim."
+}
