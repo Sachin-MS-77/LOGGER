@@ -40,6 +40,17 @@ def clickhouse(client,sql,body=None):
                   auth=('logflux',os.environ['LOGFLUX_LAB_PASSWORD']))
     r.raise_for_status();return r
 
+def stream_clickhouse(client,sql):
+    credential=base64.b64encode(f"logflux:{os.environ['LOGFLUX_LAB_PASSWORD']}".encode()).decode()
+    request=client.build_request('POST','http://127.0.0.1:18123/',params={'query':sql},headers={'Authorization':f'Basic {credential}'})
+    response=client.send(request,stream=True)
+    try:
+        response.raise_for_status()
+        for line in response.iter_lines():
+            if line: yield json.loads(line)
+    finally:
+        response.close()
+
 def process_record(record,run_id,worker):
     envelope=record['value'];raw=base64.b64decode(envelope['raw_base64'],validate=True)
     if digest(raw)!=envelope['raw_hash']: raise ValueError('broker envelope raw hash mismatch')
@@ -113,15 +124,16 @@ def run(count,workers,directory,partitions=4):
         with ProcessPoolExecutor(max_workers=workers,mp_context=multiprocessing.get_context('spawn')) as pool:
             results=list(pool.map(worker,configs))
         seconds=time.perf_counter()-started
-        rows=clickhouse(client,f"SELECT * FROM logflux_scale FINAL WHERE run_id='{run_id}' ORDER BY event_id FORMAT JSONEachRow").text
-        rows=[json.loads(x) for x in rows.splitlines()]
-        if len(rows)!=count:raise AssertionError(f'expected {count}, stored {len(rows)}')
-        for row in rows:
+        stored=0; roots=set(); statuses={}
+        for row in stream_clickhouse(client,f"SELECT * FROM logflux_scale FINAL WHERE run_id='{run_id}' ORDER BY event_id FORMAT JSONEachRow"):
+            stored+=1; statuses[row['status']]=statuses.get(row['status'],0)+1
             if digest(base64.b64decode(row['raw_base64']))!=row['raw_hash']: raise AssertionError('stored bytes changed')
             manifest=json.loads(row['manifest'])
             if digest(row['normalized'].encode())!=manifest['normalized_hash']:raise AssertionError('normalized bytes changed')
             if not verify_proof(leaf_hash(manifest),json.loads(row['proof']),row['batch_root']):raise AssertionError('shard proof failed')
-        roots=sorted({row['batch_root'] for row in rows})
+            roots.add(row['batch_root'])
+        if stored!=count:raise AssertionError(f'expected {count}, stored {stored}')
+        roots=sorted(roots)
         manifests=[{'run_id':run_id,'batch_root':root} for root in roots]
         root,proofs=merkle([leaf_hash(x) for x in manifests])
         # Resume all workers with their committed offsets. No new records are written.
@@ -131,7 +143,7 @@ def run(count,workers,directory,partitions=4):
           'events_per_second':round(count/seconds,2),'producer_seconds':round(producer_seconds,4),
           'end_to_end_seconds':round(seconds+producer_seconds,4),'worker_results':results,'all_raw_hashes_verified':True,
           'all_shard_proofs_verified':True,'resume_no_duplicates':True,'aggregate_root':root,
-          'batch_count':len(roots),'status_counts':dict(__import__('collections').Counter(x['status'] for x in rows)),
+          'batch_count':len(roots),'status_counts':statuses,
           'platform':platform.platform(),'python':platform.python_version(),
           'scope':f'Local {partitions}-partition broker, separate Python workers, one ClickHouse node. Timed worker startup + broker read + normalization + Merkle creation + columnar insertion + durable offset commits. Producer separately timed. Verification and root aggregation excluded. No HA, dynamic rebalancing or dashboard integration.'}
         write_atomic(directory/(run_id+'-aggregate.json'),{'root':root,'manifests':manifests,'proofs':proofs})
