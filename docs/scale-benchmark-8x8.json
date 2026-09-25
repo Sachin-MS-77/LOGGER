@@ -1,0 +1,17 @@
+{
+  "run_id": "f35b018bd3144988ab4a0236efb8155a",
+  "events": 10000,
+  "workers": 8,
+  "partitions": 8,
+  "seconds": 1.662,
+  "events_per_second": 6017.02,
+  "producer_seconds": 4.7826,
+  "end_to_end_seconds": 6.4445,
+  "all_raw_hashes_verified": true,
+  "all_shard_proofs_verified": true,
+  "resume_no_duplicates": true,
+  "status_counts": {"normalized": 8000, "unparsed": 2000},
+  "platform": "macOS-26.3-arm64-arm-64bit-Mach-O",
+  "python": "3.14.0",
+  "scope": "Local 8-partition broker, separate Python workers, one ClickHouse node. Timed worker startup, broker read, normalization, Merkle creation, columnar insertion and durable offset commits. Producer, verification and root aggregation are timed separately or excluded. No HA or automatic rebalancing claim."
+}
