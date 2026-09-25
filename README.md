@@ -37,7 +37,7 @@ py -3 -m venv .venv
 
 Open **http://127.0.0.1:8765** and use the locally generated token in `data/admin-token`. Keep tokens, raw operational logs and private keys outside Git. Windows native installation is documented, not independently verified in this review.
 
-Choose **Run demo replay** for 2,187 clearly labeled synthetic events. A fresh clone contains no operational database, model weights or pre-approved parser keys. Theme choices are Obsidian, Pearl and Rose.
+Choose **Run demo replay** for 7,000 clearly labeled synthetic events. A fresh clone contains no operational database, model weights or pre-approved parser keys. Theme choices are Obsidian, Pearl and Rose.
 
 ## Why the sandbox matters
 

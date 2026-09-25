@@ -302,7 +302,7 @@ def create_app(data_dir=None, start_receivers=True):
     @api.post("/demo/start")
     async def demo_start(body:dict|None=None):
         if app.state.demo["running"]: raise ValueError("replay already running")
-        count=min(max(int((body or {}).get("count",2187)),5),50000)
+        count=min(max(int((body or {}).get("count",7000)),5),50000)
         app.state.demo={"running":True,"processed":0,"total":count,"label":"Synthetic replay"}
         async def run():
             try:

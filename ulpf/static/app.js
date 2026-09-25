@@ -871,10 +871,10 @@ async function action(el) {
       return;
     }
     case "demo": {
-      await post("/demo/start", { count: 2187 });
+      await post("/demo/start", { count: 7000 });
       closeModal();
       toast(
-        "Synthetic replay started (2,187 events). Every generated event is labeled replay.",
+        "Synthetic replay started (7,000 events). Every generated event is labeled replay.",
       );
       await refresh(true);
       return;
