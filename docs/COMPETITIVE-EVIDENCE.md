@@ -2,6 +2,8 @@
 
 This page prevents an old repository snapshot or an apples-to-oranges benchmark from being mistaken for the current submission. Every positive claim below points to a committed report or a command a reviewer can run.
 
+The project has two deliberately separate data paths. The UI replay and throughput generator use synthetic fixtures so a judge can reproduce the demonstration. Dataset coverage and capture replay use downloaded public corpora; they are not synthetic substitutions. Raw files are ignored locally because the public archives are large and subject to their own redistribution terms.
+
 | Concern | Current evidence | Boundary that remains |
 |---|---|---|
 | Throughput | The sequential Store baseline is 2,187.8 events/s. The live collector has 120-second TCP/UDP/TLS runs, and the separate four-partition worker lab measured 3,003 / 4,571 / 4,222 events/s for 1/2/4 workers. | These are different scopes. They are not a billion-events/day or 24-hour capacity certification. |

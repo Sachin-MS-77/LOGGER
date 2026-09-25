@@ -10,6 +10,8 @@ LOGFLUX receives device logs, preserves original message bytes, normalizes suppo
 
 **Status:** working single-node application; 81 passing tests; Docker restart acceptance and native Elasticsearch Bulk verification passed locally. Three network witness processes and the separate Redpanda/ClickHouse worker experiment were exercised on one computer. Full OCSF conformance, replicated enterprise storage, independent-machine custody and billion-events/day capacity are **not** claimed. The saved GitHub token lacks workflow permission, so the CI template is included for a repository maintainer to install; no hosted CI pass is claimed.
 
+> **Data provenance — read this first:** the **dashboard demo replay and throughput load generator are synthetic, clearly labeled fixtures**. The **real-data validation is separate**: the repository downloaded and scanned complete public Honeynet Scan 30/34, Loghub Linux/Apache/OpenSSH and MACCDC 2012 corpora. Their source URLs, archive hashes and per-file coverage are committed in [`docs/dataset-manifest.json`](docs/dataset-manifest.json) and [`docs/coverage.json`](docs/coverage.json). Run `scripts/send_logs.py` to stream a real staged capture through the collector. Raw public corpora remain in the ignored local `data/` directory and are not redistributed in GitHub.
+
 [Team setup](docs/TEAM_SETUP.md) · [Measured results](#measured-results) · [Requirement coverage](#requirements-a-k) · [Architecture](docs/architecture.pdf) · [Verification](docs/VERIFICATION.md) · [Integration commands](docs/INTEGRATIONS.md)
 
 ![Current LOGFLUX Command Center](docs/screenshots/command-center.png)
