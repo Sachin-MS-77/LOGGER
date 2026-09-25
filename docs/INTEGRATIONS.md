@@ -11,6 +11,8 @@ python scripts/verify_docker.py --container "$(docker compose ps -q logflux)" --
 
 This verifies authenticated ingestion, original bytes, TCP/UDP receipt, sealing, and proof verification after restarting the container. It writes `docs/docker-verification.json`. Restart only a test deployment. The [CI template](ci/README.md) repeats it in GitHub Actions once a maintainer installs it. The saved token could not create workflows, so hosted CI is pending; a local pass is not a CI pass.
 
+For bounded single-node socket concurrency, set `LOGFLUX_RECEIVER_WORKERS=2` (or another value from 1 to 32) before starting Compose. The value controls UDP queue consumers and is reported by `GET /api/status`; it does not turn SQLite into a distributed or highly available store. Measure write contention before increasing it.
+
 ## Elasticsearch Bulk output
 
 Choose **System & Outputs → Add output → Elasticsearch Bulk**, enter the server base URL (not `/_bulk`) and a lowercase index name. Only new normalized revisions are queued after registration. Existing backlog is not automatically exported.

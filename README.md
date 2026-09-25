@@ -129,7 +129,7 @@ Dataset attribution: [Loghub](https://github.com/logpai/loghub) (research/academ
 
 The historical **file/replay-style, sequential in-process Store baseline** was **2,187.8 events/s** on 2,000 synthetic events. It excludes actual file reading, sockets, LLM calls and a concurrent dashboard: [exact scope](docs/benchmark.json). It must not be presented as a live socket rate.
 
-The actual collector was tested with four concurrent connections for **120 seconds per rate**, on the same computer as the sender. Other local work also used that computer; these are development-machine measurements, not dedicated-host capacity certification.
+The actual collector was tested with four concurrent connections for **120 seconds per rate**, on the same computer as the sender. The container supports bounded UDP consumer concurrency through `LOGFLUX_RECEIVER_WORKERS` (default Docker value: 2; allowed range: 1–32). Increase it only after measuring SQLite write contention on the target host. Other local work also used that computer; these are development-machine measurements, not dedicated-host capacity certification.
 
 | Transport | Offered events/s | Actual sent/s | Durable received/s in window | Unreceived after drain |
 |---|---:|---:|---:|---:|

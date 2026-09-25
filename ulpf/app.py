@@ -80,7 +80,7 @@ def create_app(data_dir=None, start_receivers=True):
         receiver=Receivers(store,os.getenv("LOGFLUX_SYSLOG_HOST", os.getenv("AEGIS_SYSLOG_HOST","127.0.0.1")),int(os.getenv("LOGFLUX_SYSLOG_PORT", os.getenv("AEGIS_SYSLOG_PORT","5514"))),
                            int(os.getenv("LOGFLUX_TLS_PORT", os.getenv("AEGIS_TLS_PORT","6514"))),os.getenv("LOGFLUX_TLS_CERT", os.getenv("AEGIS_TLS_CERT")),os.getenv("LOGFLUX_TLS_KEY", os.getenv("AEGIS_TLS_KEY")),os.getenv("LOGFLUX_TLS_CA", os.getenv("AEGIS_TLS_CA")))
         app.state.receivers=receiver
-        lab_receiver=Receivers(store,"127.0.0.1",int(os.getenv("LOGFLUX_LAB_PORT", os.getenv("AEGIS_LAB_PORT","5515"))),mode="lab")
+        lab_receiver=Receivers(store,"127.0.0.1",int(os.getenv("LOGFLUX_LAB_PORT", os.getenv("AEGIS_LAB_PORT","5515"))),mode="lab", workers=1)
         app.state.lab_receivers=lab_receiver
         store.recover()
         if start_receivers:
@@ -129,7 +129,7 @@ def create_app(data_dir=None, start_receivers=True):
                 "lab_listeners":app.state.lab_receivers.status,"demo":app.state.demo,"background_error":app.state.background_error,"registry_public_key":store().signer.public,
                 "witnesses":[{"name":w.name,"enabled":w.enabled,"key_id":w.key.id} for w in store().ledger.witnesses],
                 "ledger_mode":store().ledger.trust_note, "remote_witnesses":bool(os.getenv("LOGFLUX_WITNESS_CONFIG")), "storage":"SQLite WAL + FULL synchronous durability",
-                "limits":{"event_bytes":MAX_EVENT,"single_node":True},"offline_assets":True}
+                "limits":{"event_bytes":MAX_EVENT,"single_node":True,"receiver_workers":app.state.receivers.workers,"udp_queue_capacity":app.state.receivers.queue.maxsize},"offline_assets":True}
     @app.exception_handler(httpx.HTTPError)
     async def upstream_error(request,exc):
         return JSONResponse({"detail":"Local model service could not complete the request. Check System & outputs; manual mapping remains available."},status_code=503)

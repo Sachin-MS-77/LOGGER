@@ -1,12 +1,16 @@
 """TCP, UDP and optional TLS Syslog listeners with bounded message framing."""
 import asyncio
+import os
 import ssl
 from .store import MAX_EVENT
 
 class Receivers:
-    def __init__(self, store, host="127.0.0.1", port=5514, tls_port=6514, cert=None, key=None, ca=None, mode="live"):
+    def __init__(self, store, host="127.0.0.1", port=5514, tls_port=6514, cert=None, key=None, ca=None, mode="live", workers=None):
         self.store=store; self.mode=mode; self.host=host; self.port=port; self.tls_port=tls_port
         self.cert=cert; self.key=key; self.ca=ca; self.tcp=None; self.udp=None; self.tls=None
+        configured = workers if workers is not None else int(os.getenv("LOGFLUX_RECEIVER_WORKERS", "1"))
+        if not 1 <= configured <= 32: raise ValueError("LOGFLUX_RECEIVER_WORKERS must be between 1 and 32")
+        self.workers = configured
         self.queue=asyncio.Queue(maxsize=4096); self.tasks=[]
         self.status={"tcp":{"listening":False},"udp":{"listening":False},"tls":{"listening":False,"reason":"certificate not configured"}}
 
@@ -40,7 +44,7 @@ class Receivers:
                 self.tls=await asyncio.start_server(self.handle,self.host,self.tls_port,ssl=context,limit=MAX_EVENT+32)
                 self.status["tls"]={"listening":True,"host":self.host,"port":self.tls_port,"mutual_tls":bool(self.ca)}
             except OSError as exc: self.status["tls"]={"listening":False,"error":str(exc)}
-        self.tasks=[asyncio.create_task(self.consume())]
+        self.tasks=[asyncio.create_task(self.consume()) for _ in range(self.workers)]
 
     async def consume(self):
         while True:

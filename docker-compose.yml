@@ -19,6 +19,7 @@ services:
       LOGFLUX_DATA_DIR: /var/lib/logflux
       LOGFLUX_HOST: 0.0.0.0
       LOGFLUX_SYSLOG_HOST: 0.0.0.0
+      LOGFLUX_RECEIVER_WORKERS: ${LOGFLUX_RECEIVER_WORKERS:-2}
     restart: unless-stopped
 volumes:
   logflux-data:

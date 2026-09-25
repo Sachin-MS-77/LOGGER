@@ -16,6 +16,10 @@ Updated 23 September 2026. Status is backed by [verification](VERIFICATION.md), 
 | j | Air gap | System & Outputs → offline guide; inspect local asset requests | Dependencies/models/images must be staged; physically isolated trial pending |
 | k | Container | `docker compose up --build -d`, then `GET /health` | Local restart/byte/proof acceptance passed; hosted CI setup pending |
 
+### Scale improvement added
+
+The live receiver now supports bounded concurrent UDP consumers through `LOGFLUX_RECEIVER_WORKERS` (1–32; Docker defaults to 2). `GET /api/status` reports the active worker count and queue capacity. This improves single-node socket handling while preserving the explicit SQLite, no-HA boundary; the Redpanda/ClickHouse experiment remains the path for multi-process scale testing.
+
 
 ## Original-plan components
 
