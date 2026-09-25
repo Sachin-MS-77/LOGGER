@@ -102,6 +102,8 @@ Inspect listeners, schema information and local model availability. Configure a 
 
 ## Measured results
 
+If an older comparison describes only synthetic demo events or an untested Docker image, use the current [competitive evidence matrix](docs/COMPETITIVE-EVIDENCE.md). The dashboard replay is intentionally easy to understand; full-corpus coverage, live sockets and distributed-worker evidence are recorded separately. A reviewer can also replay a real capture through the collector with the documented sender command.
+
 All numbers describe the specified run. Coverage is not detection accuracy, and offered load is not achieved throughput.
 
 ### Public corpus coverage

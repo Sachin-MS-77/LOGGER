@@ -20,6 +20,8 @@ Updated 23 September 2026. Status is backed by [verification](VERIFICATION.md), 
 
 The live receiver now supports bounded concurrent UDP consumers through `LOGFLUX_RECEIVER_WORKERS` (1–32; Docker defaults to 2). `GET /api/status` reports the active worker count and queue capacity. This improves single-node socket handling while preserving the explicit SQLite, no-HA boundary; the Redpanda/ClickHouse experiment remains the path for multi-process scale testing.
 
+The [competitive evidence matrix](COMPETITIVE-EVIDENCE.md) documents the current measured scopes and adds a safe real-capture replay command through the actual collector.
+
 
 ## Original-plan components
 
