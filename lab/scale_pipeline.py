@@ -87,18 +87,19 @@ def worker(config):
                 count+=len(rows)
     return {'worker':number,'partitions':partitions,'processed':count,'seconds':round(time.perf_counter()-started,4)}
 
-def run(count,workers,directory):
+def run(count,workers,directory,partitions=4):
+    if partitions < 1 or workers < 1 or workers > partitions: raise ValueError('workers must be between 1 and partitions')
     run_id=uuid.uuid4().hex;topic='logflux-'+run_id;directory=Path(directory);directory.mkdir(parents=True,exist_ok=True)
     compose=['docker','compose','-p','logflux-scale','-f',str(ROOT/'lab/compose.scale.yml')]
-    subprocess.run(compose+['exec','-T','redpanda','rpk','topic','create',topic,'--partitions','4'],check=True,capture_output=True)
+    subprocess.run(compose+['exec','-T','redpanda','rpk','topic','create',topic,'--partitions',str(partitions)],check=True,capture_output=True)
     with httpx.Client(timeout=30,trust_env=False) as client:
         clickhouse(client,'''CREATE TABLE IF NOT EXISTS logflux_scale (
           run_id String,event_id String,worker UInt32,raw_base64 String,raw_hash String,
           normalized String,status String,error String,manifest String,batch_root String,proof String)
           ENGINE=ReplacingMergeTree ORDER BY (run_id,event_id)''')
-        expected=[0]*4;records=[];start=time.perf_counter()
+        expected=[0]*partitions;records=[];start=time.perf_counter()
         for i,item in enumerate(scenario(count)):
-            p=i%4;expected[p]+=1
+            p=i%partitions;expected[p]+=1
             records.append({'partition':p,'key':str(i),'value':{'raw_base64':base64.b64encode(item['raw']).decode(),
               'raw_hash':digest(item['raw']),'source':item['source'],'received_at':utcnow()}})
         for i in range(0,len(records),250):
@@ -108,7 +109,7 @@ def run(count,workers,directory):
             if any(x.get('error_code',0) for x in r.json()['offsets']):raise ValueError('broker rejected record')
         producer_seconds=time.perf_counter()-start
         started=time.perf_counter()
-        configs=[(topic,run_id,w,list(range(w,4,workers)),expected,str(directory)) for w in range(workers)]
+        configs=[(topic,run_id,w,list(range(w,partitions,workers)),expected,str(directory)) for w in range(workers)]
         with ProcessPoolExecutor(max_workers=workers,mp_context=multiprocessing.get_context('spawn')) as pool:
             results=list(pool.map(worker,configs))
         seconds=time.perf_counter()-started
@@ -126,18 +127,19 @@ def run(count,workers,directory):
         # Resume all workers with their committed offsets. No new records are written.
         resumed=[worker(c) for c in configs]
         assert sum(x['processed'] for x in resumed)==0
-        result={'run_id':run_id,'events':count,'workers':workers,'partitions':4,'seconds':round(seconds,4),
+        result={'run_id':run_id,'events':count,'workers':workers,'partitions':partitions,'seconds':round(seconds,4),
           'events_per_second':round(count/seconds,2),'producer_seconds':round(producer_seconds,4),
           'end_to_end_seconds':round(seconds+producer_seconds,4),'worker_results':results,'all_raw_hashes_verified':True,
           'all_shard_proofs_verified':True,'resume_no_duplicates':True,'aggregate_root':root,
           'batch_count':len(roots),'status_counts':dict(__import__('collections').Counter(x['status'] for x in rows)),
           'platform':platform.platform(),'python':platform.python_version(),
-          'scope':'Local four-partition broker, separate Python workers, one ClickHouse node. Timed worker startup + broker read + normalization + Merkle creation + columnar insertion + durable offset commits. Producer separately timed. Verification and root aggregation excluded. No HA, dynamic rebalancing or dashboard integration.'}
+          'scope':f'Local {partitions}-partition broker, separate Python workers, one ClickHouse node. Timed worker startup + broker read + normalization + Merkle creation + columnar insertion + durable offset commits. Producer separately timed. Verification and root aggregation excluded. No HA, dynamic rebalancing or dashboard integration.'}
         write_atomic(directory/(run_id+'-aggregate.json'),{'root':root,'manifests':manifests,'proofs':proofs})
         return result
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--events',type=int,default=2000);p.add_argument('--workers',type=int,choices=[1,2,4],default=4)
+    p=argparse.ArgumentParser();p.add_argument('--events',type=int,default=2000);p.add_argument('--workers',type=int,default=4);p.add_argument('--partitions',type=int,default=4)
     p.add_argument('--directory',default='data/scale-lab');p.add_argument('--output',default='docs/scale-benchmark.json');a=p.parse_args()
     if not 4<=a.events<=100000:p.error('events must be between 4 and 100000')
-    result=run(a.events,a.workers,a.directory);write_atomic(a.output,result);print(json.dumps(result,indent=2))
+    if a.partitions < 1 or a.workers < 1 or a.workers > a.partitions:p.error('--workers must be between 1 and --partitions')
+    result=run(a.events,a.workers,a.directory,a.partitions);write_atomic(a.output,result);print(json.dumps(result,indent=2))

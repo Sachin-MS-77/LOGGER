@@ -30,9 +30,11 @@ docker compose -p logflux-scale -f lab/compose.scale.yml up -d
 python lab/scale_pipeline.py --events 2000 --workers 1 --output docs/scale-benchmark-1.json
 python lab/scale_pipeline.py --events 2000 --workers 2 --output docs/scale-benchmark-2.json
 python lab/scale_pipeline.py --events 2000 --workers 4 --output docs/scale-benchmark-4.json
+# Optional wider lab run: one worker per partition, still not HA.
+python lab/scale_pipeline.py --events 10000 --partitions 8 --workers 8 --output docs/scale-benchmark-8x8.json
 ```
 
-The experiment uses a four-partition Redpanda topic, static partition ownership and separate Python processes. Raw bytes travel as Base64 with their hash. ClickHouse acknowledges a batch before each worker atomically commits its local offset. A restart resumes from those offsets. ReplacingMergeTree with `FINAL` gives logical deduplication by run/event ID; this is at-least-once delivery, not exactly-once execution. Each run creates a fresh topic; remove lab resources after testing to reclaim disk.
+The experiment uses a configurable Redpanda topic (four partitions by default), static partition ownership and separate Python processes. Raw bytes travel as Base64 with their hash. ClickHouse acknowledges a batch before each worker atomically commits its local offset. A restart resumes from those offsets. ReplacingMergeTree with `FINAL` gives logical deduplication by run/event ID; this is at-least-once delivery, not exactly-once execution. Each run creates a fresh topic; remove lab resources after testing to reclaim disk.
 
 Each worker seals batch manifests into Merkle trees. Aggregation creates a higher-level tree of batch roots. The final verifier checks every raw hash, normalized hash and inclusion proof. Throughput timing includes worker startup, broker reads, normalization, Merkle creation, columnar insertion and offset commits. Producer time is separate; final verification and root aggregation are outside worker throughput timing. Compare identical event counts and retain all results, including regressions.
 
