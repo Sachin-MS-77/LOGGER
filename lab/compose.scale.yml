@@ -7,8 +7,8 @@ services:
       - redpanda
       - start
       - --mode=dev-container
-      - --smp=1
-      - --memory=512M
+      - --smp=${LOGFLUX_REDPANDA_SMP:-4}
+      - --memory=${LOGFLUX_REDPANDA_MEMORY:-1G}
       - --reserve-memory=0M
       - --overprovisioned
       - --node-id=0
@@ -18,7 +18,7 @@ services:
       - --advertise-pandaproxy-addr=127.0.0.1:18082
     ports: ["127.0.0.1:18082:8082"]
     volumes: ["broker-data:/var/lib/redpanda/data"]
-    mem_limit: 768m
+    mem_limit: ${LOGFLUX_REDPANDA_LIMIT:-1536m}
   clickhouse:
     image: clickhouse/clickhouse-server:25.3
     ports: ["127.0.0.1:18123:8123"]
@@ -27,7 +27,7 @@ services:
       CLICKHOUSE_PASSWORD: ${LOGFLUX_LAB_PASSWORD:?Set a private lab password}
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
     volumes: ["columnar-data:/var/lib/clickhouse"]
-    mem_limit: 1g
+    mem_limit: ${LOGFLUX_CLICKHOUSE_LIMIT:-1536m}
 volumes:
   broker-data:
   columnar-data:
