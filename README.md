@@ -149,6 +149,8 @@ At overload, send calls can stall under TCP backpressure. “Unreceived” means
 
 Reports: [TCP baseline](docs/benchmark-socket-baseline.json), [TCP overload](docs/benchmark-sustained-final.json), [UDP](docs/benchmark-udp.json), [TLS](docs/benchmark-tls.json). Each report includes an explicitly labeled arithmetic events/day projection; **no 24-hour or billion-event run was performed**.
 
+An additional four-worker stress run offered 18,000 TCP events/s for 20 seconds and durably received 1,772 events/s during the window, with backpressure visible after drain. See [benchmark-18000-stress.json](docs/benchmark-18000-stress.json); the offered rate is not achieved throughput.
+
 ### Separate broker / columnar experiment
 
 Four Redpanda partitions → independent Python workers → ClickHouse, with durable offset commits, stable event IDs, batch Merkle proofs and aggregate roots. All 2,000 raw hashes and shard proofs verified in each run; resuming committed offsets wrote no additional records.

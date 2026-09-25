@@ -1,0 +1,14 @@
+{
+  "transport": "tcp",
+  "offered_events_per_second": 18000,
+  "duration_seconds": 20,
+  "connections": 4,
+  "receiver_workers": 4,
+  "actual_sent_events_per_second": 3867.1,
+  "durably_received_in_window": 35443,
+  "live_socket_events_per_second": 1772.15,
+  "received_after_15_second_drain": 51192,
+  "unreceived_after_drain": 26150,
+  "unreceived_percent": 33.8109,
+  "scope": "Real loopback TCP collector with SQLite FULL durability and concurrent senders. Short stress run; same-machine sender and receiver. Backpressure and queued records are visible. Not a sustained, 24-hour or production-capacity result."
+}

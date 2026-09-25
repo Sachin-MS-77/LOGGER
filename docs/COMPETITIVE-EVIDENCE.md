@@ -12,6 +12,8 @@ This page prevents an old repository snapshot or an apples-to-oranges benchmark 
 | Distributed scale | `lab/scale_pipeline.py` uses four Redpanda partitions, separate worker processes, ClickHouse writes, durable offsets, stable IDs and Merkle proofs. | The experiment is separate from the SQLite dashboard and has no HA or automatic reassignment. |
 | Maturity | The current commit history contains the implementation, reports, tests and submission assets; the number of commits is not a functional acceptance criterion. | Production hardening still requires external deployment, device acceptance and long-duration operations. |
 
+The additional 18,000-events/s stress run is recorded in [benchmark-18000-stress.json](benchmark-18000-stress.json). It offered 18,000 events/s but achieved 1,772 durable events/s during the 20-second window, with 33.8109% still unreceived after the drain deadline. This is useful capacity evidence precisely because it exposes the current backpressure boundary; it must not be rewritten as an 18,000-events/s result.
+
 ## Real-capture replay
 
 After staging a corpus with `scripts/fetch_datasets.py`, replay one complete file through the actual TCP listener:
