@@ -48,16 +48,21 @@ def run(args):
         if len(records)>=sent: break
     finally:
       gateway.terminate(); gateway.wait(timeout=10)
-    manifests=[]; verified=0
+    manifests=[]; verified=0; batch_roots=[]; batch_size=1000
     for item in records:
         value=item.get('value',item); raw=base64.b64decode(value['raw_base64'],validate=True)
         if hashlib.sha256(raw).hexdigest()!=value['raw_hash']: raise AssertionError('raw hash mismatch')
         manifest={'id':f'{topic}:{item.get("partition",0)}:{item.get("offset",0)}','raw_hash':value['raw_hash'],'received_ns':value['received_ns']}
         manifests.append(manifest); verified+=1
-    root,proofs=merkle([leaf_hash(x) for x in manifests]) if manifests else ('',[])
+    # Production-shaped sealing: bounded Merkle batches, then an aggregate root.
+    for start in range(0,len(manifests),batch_size):
+        batch=manifests[start:start+batch_size]; batch_root,proofs=merkle([leaf_hash(x) for x in batch])
+        if not all(len(proof)==len(proofs[i]) for i,proof in enumerate(proofs)): raise AssertionError('invalid batch proof')
+        batch_roots.append({'batch':start//batch_size,'root':batch_root,'events':len(batch)})
+    root,_=merkle([leaf_hash(x) for x in batch_roots]) if batch_roots else ('',[])
     with tempfile.TemporaryDirectory(prefix='logflux-e2e-witness-') as directory:
         ledger=WitnessLedger(Path(directory)/'keys'); checkpoint={'sequence':1,'previous':'0'*64,'root':root,'event_count':verified,'created_at':utcnow()}; anchor=ledger.anchor(checkpoint,[]); ledger.close()
-    report={'topic':topic,'offered_rate':args.rate,'duration_seconds':args.seconds,'sent_to_gateway':sent,'broker_observed':len(records),'durably_verified':verified,'loss_percent':round(100*max(0,sent-verified)/sent,4) if sent else None,'raw_hashes_verified':verified==len(records),'merkle_root':root,'witness_quorum':anchor.get('anchored',False),'witness_votes':len(anchor.get('votes',[])),'scope':'TCP gateway to Redpanda REST, streamed raw-hash verification, Merkle batch and local three-witness checkpoint. Single broker and same-host witnesses; not the SQLite dashboard or an HA deployment.'}
+    report={'topic':topic,'offered_rate':args.rate,'duration_seconds':args.seconds,'sent_to_gateway':sent,'broker_observed':len(records),'durably_verified':verified,'sent_per_second':round(sent/args.seconds,2),'durably_verified_per_second':round(verified/args.seconds,2),'loss_percent':round(100*max(0,sent-verified)/sent,4) if sent else None,'raw_hashes_verified':verified==len(records),'merkle_batch_size':batch_size,'merkle_batches':len(batch_roots),'merkle_root':root,'witness_quorum':anchor.get('anchored',False),'witness_votes':len(anchor.get('votes',[])),'scope':'TCP gateway to Redpanda REST, streamed raw-hash verification, bounded Merkle batches, aggregate root and local three-witness checkpoint. Single broker and same-host witnesses; not the SQLite dashboard or an HA deployment.'}
     Path(args.output).write_text(json.dumps(report,indent=2)+'\n'); print(json.dumps(report,indent=2)); return report
 
 if __name__=='__main__':

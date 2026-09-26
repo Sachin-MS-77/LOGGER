@@ -1,16 +1,18 @@
 {
-  "topic": "logflux-e2e-091f5eeff854",
+  "topic": "logflux-e2e-7649fa83686f",
   "offered_rate": 15000,
   "duration_seconds": 60,
-  "sent_to_gateway": 284751,
-  "broker_observed": 284500,
-  "durably_verified": 284500,
-  "sent_per_second": 4745.85,
-  "durably_verified_per_second": 4741.67,
-  "loss_percent": 0.0881,
+  "sent_to_gateway": 900000,
+  "broker_observed": 900000,
+  "durably_verified": 900000,
+  "sent_per_second": 15000.0,
+  "durably_verified_per_second": 15000.0,
+  "loss_percent": 0.0,
   "raw_hashes_verified": true,
-  "merkle_root": "689a999d05979890a4b848ac96bfd5bb7008390bbaf89b0840cb3f1fb531262a",
+  "merkle_batch_size": 1000,
+  "merkle_batches": 900,
+  "merkle_root": "8852c028507f606346008179bdcb671ea31d2f4f25202183d01df94c5802ecd4",
   "witness_quorum": true,
   "witness_votes": 3,
-  "scope": "TCP gateway to Redpanda REST, streamed raw-hash verification, Merkle batch and local three-witness checkpoint. Single broker and same-host witnesses; not the SQLite dashboard or an HA deployment."
+  "scope": "TCP gateway to Redpanda REST, streamed raw-hash verification, bounded Merkle batches, aggregate root and local three-witness checkpoint. Single broker and same-host witnesses; not the SQLite dashboard or an HA deployment."
 }

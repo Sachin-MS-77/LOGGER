@@ -2,7 +2,8 @@
 
 The repository now includes an opt-in TCP gateway at `scripts/broker_gateway.py`.
 It accepts RFC 6587 octet-counted frames, computes SHA-256 over the exact bytes,
-and publishes bounded batches to Redpanda's Kafka-compatible REST API. The
+and publishes bounded 5,000-record batches through four concurrent Redpanda
+REST publishers by default. The
 socket process does not write SQLite; Redpanda is the durable burst buffer.
 
 ```sh
@@ -16,12 +17,12 @@ queue only after Redpanda acknowledges it. This makes backpressure visible and
 prevents silent socket-process drops. UDP is deliberately not routed through
 this gateway: UDP remains best effort unless a sender uses TCP/TLS.
 
-The existing `lab/scale_pipeline.py` remains the verified worker/evidence
-experiment. Wiring its consumer directly to the live gateway is the next
-acceptance step: workers must write raw envelopes to the shared evidence vault,
-seal Merkle batches, and call the configured witness quorum before this mode can
-replace the dashboard's SQLite path. Until that acceptance is complete, the
-gateway is experimental and does not change the dashboard's storage guarantee.
+The 60-second acceptance run in `docs/benchmark-15k.json` sent 900,000 records
+through this gateway, verified every raw hash, sealed 900 bounded Merkle batches
+and collected three witness signatures with zero loss. The gateway remains an
+opt-in scalable path; the dashboard's SQLite mode is unchanged, and production
+deployment still needs replicated broker/storage nodes and independently
+administered witnesses.
 
 Trade-offs: batching improves throughput and removes SQLite contention, but
 Redpanda durability depends on broker replication and its acknowledgement mode;

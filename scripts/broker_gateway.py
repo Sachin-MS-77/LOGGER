@@ -14,9 +14,9 @@ import urllib.request
 MAX_EVENT = 64 * 1024
 
 class Gateway:
-    def __init__(self, broker, topic, host, port, batch_size=500, queue_size=20000):
+    def __init__(self, broker, topic, host, port, batch_size=5000, queue_size=50000, publishers=4):
         self.broker=broker.rstrip('/'); self.topic=topic; self.host=host; self.port=port
-        self.batch_size=batch_size; self.queue=asyncio.Queue(maxsize=queue_size)
+        self.batch_size=batch_size; self.publishers=publishers; self.queue=asyncio.Queue(maxsize=queue_size)
         self.accepted=0; self.published=0; self.rejected=0
 
     def envelope(self, raw, peer, sequence):
@@ -34,15 +34,18 @@ class Gateway:
         self.published+=len(rows)
 
     async def publisher(self):
-        batch=[]
+        batch=[]; pending=[]
         while True:
             item=await self.queue.get()
             if item is None:
-                if batch: await self.publish(batch)
+                if batch: pending.append(asyncio.create_task(self.publish(batch)))
+                if pending: await asyncio.gather(*pending)
                 self.queue.task_done(); return
             batch.append(item); self.queue.task_done()
             if len(batch)>=self.batch_size:
-                await self.publish(batch); batch=[]
+                pending.append(asyncio.create_task(self.publish(batch))); batch=[]
+                if len(pending)>=self.publishers:
+                    await asyncio.gather(*pending); pending=[]
 
     async def handle(self, reader, writer):
         peer=writer.get_extra_info('peername')[0]; sequence=0
@@ -74,8 +77,8 @@ class Gateway:
                 await self.queue.put(None); await self.queue.join(); await worker
 
 def main():
-    p=argparse.ArgumentParser(); p.add_argument('--broker',default='http://127.0.0.1:18082'); p.add_argument('--topic',default='logflux-live'); p.add_argument('--host',default='127.0.0.1'); p.add_argument('--port',type=int,default=5516); p.add_argument('--batch-size',type=int,default=500); p.add_argument('--queue-size',type=int,default=20000); a=p.parse_args()
-    if not 1<=a.batch_size<=5000 or not 100<=a.queue_size<=1000000:p.error('invalid batch or queue size')
-    try: asyncio.run(Gateway(a.broker,a.topic,a.host,a.port,a.batch_size,a.queue_size).run())
+    p=argparse.ArgumentParser(); p.add_argument('--broker',default='http://127.0.0.1:18082'); p.add_argument('--topic',default='logflux-live'); p.add_argument('--host',default='127.0.0.1'); p.add_argument('--port',type=int,default=5516); p.add_argument('--batch-size',type=int,default=5000); p.add_argument('--queue-size',type=int,default=50000); p.add_argument('--publishers',type=int,default=4); a=p.parse_args()
+    if not 1<=a.batch_size<=10000 or not 100<=a.queue_size<=1000000 or not 1<=a.publishers<=16:p.error('invalid batch, queue or publisher count')
+    try: asyncio.run(Gateway(a.broker,a.topic,a.host,a.port,a.batch_size,a.queue_size,a.publishers).run())
     except KeyboardInterrupt: pass
 if __name__=='__main__': main()
