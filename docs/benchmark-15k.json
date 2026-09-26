@@ -1,0 +1,16 @@
+{
+  "topic": "logflux-e2e-091f5eeff854",
+  "offered_rate": 15000,
+  "duration_seconds": 60,
+  "sent_to_gateway": 284751,
+  "broker_observed": 284500,
+  "durably_verified": 284500,
+  "sent_per_second": 4745.85,
+  "durably_verified_per_second": 4741.67,
+  "loss_percent": 0.0881,
+  "raw_hashes_verified": true,
+  "merkle_root": "689a999d05979890a4b848ac96bfd5bb7008390bbaf89b0840cb3f1fb531262a",
+  "witness_quorum": true,
+  "witness_votes": 3,
+  "scope": "TCP gateway to Redpanda REST, streamed raw-hash verification, Merkle batch and local three-witness checkpoint. Single broker and same-host witnesses; not the SQLite dashboard or an HA deployment."
+}

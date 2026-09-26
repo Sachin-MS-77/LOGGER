@@ -106,6 +106,8 @@ Inspect listeners, schema information and local model availability. Configure a 
 
 The scalable deployment also has an opt-in [broker-backed ingestion path](docs/BROKER-ARCHITECTURE.md). Its TCP gateway hashes exact frames and batches them into Redpanda before downstream normalization. It is not presented as the dashboard's production replacement until shared-vault Merkle sealing and witness-quorum acceptance are completed.
 
+The 60-second broker acceptance run is documented in [benchmark-15k.json](docs/benchmark-15k.json). It offered 15,000 events/s, durably verified 4,741.67 events/s, passed all raw-hash/Merkle/witness checks, and exposed the remaining single-broker bottleneck. The offered rate is not relabeled as achieved throughput.
+
 If an older comparison describes only synthetic demo events or an untested Docker image, use the current [competitive evidence matrix](docs/COMPETITIVE-EVIDENCE.md). The dashboard replay is intentionally easy to understand; full-corpus coverage, live sockets and distributed-worker evidence are recorded separately. A reviewer can also replay a real capture through the collector with the documented sender command.
 
 All numbers describe the specified run. Coverage is not detection accuracy, and offered load is not achieved throughput.
