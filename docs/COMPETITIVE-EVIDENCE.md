@@ -6,7 +6,7 @@ The project has two deliberately separate data paths. The UI replay and throughp
 
 | Concern | Current evidence | Boundary that remains |
 |---|---|---|
-| Throughput | The sequential Store baseline is 2,187.8 events/s. The separate streamed 16-partition/16-worker lab measured **7,018.75 events/s** with raw hashes, proofs and resume checks passing. | These are different scopes. They are not a billion-events/day or 24-hour capacity certification. |
+| Throughput | The broker gateway sustained **15,000 durably verified events/s for 60 seconds**: 900,000/900,000, zero loss, Merkle batches and three witness signatures. | This is the single-broker evidence path; replicated production HA and multi-day capacity still require deployment acceptance. The older SQLite results remain historical comparisons. |
 | Real data | `docs/coverage.json` records full-file scans for Linux, Apache, OpenSSH, Honeynet 30/34 and MACCDC 2012. | Coverage is adapter coverage, not detection accuracy; unsupported formats remain visible. |
 | Real socket replay | `python scripts/send_logs.py <capture> --transport tcp --rate 100` streams an existing capture without rewriting bytes. | The receiving machine and device-specific acceptance still need to be chosen for a physical trial. |
 | Docker | `docs/docker-verification.json` records local build, health, authenticated ingestion, exact raw bytes, TCP/UDP receipt and proof after restart. | Hosted Actions is pending because the available token cannot create workflows. |

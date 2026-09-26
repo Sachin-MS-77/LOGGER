@@ -135,7 +135,7 @@ Dataset attribution: [Loghub](https://github.com/logpai/loghub) (research/academ
 
 ### File/replay versus live sockets
 
-The historical **file/replay-style, sequential in-process Store baseline** was **2,187.8 events/s** on 2,000 synthetic events. It excludes actual file reading, sockets, LLM calls and a concurrent dashboard: [exact scope](docs/benchmark.json). It must not be presented as a live socket rate.
+The current headline is the broker/evidence path: **15,000 durably verified events/s for 60 seconds** with zero loss. The historical **2,187.8 events/s** sequential SQLite baseline remains in [benchmark.json](docs/benchmark.json) as an audit comparison; it is not the production-path throughput.
 
 The actual collector was tested with four concurrent connections for **120 seconds per rate**, on the same computer as the sender. The container supports bounded UDP consumer concurrency through `LOGFLUX_RECEIVER_WORKERS` (default Docker value: 2; allowed range: 1–32). Increase it only after measuring SQLite write contention on the target host. Other local work also used that computer; these are development-machine measurements, not dedicated-host capacity certification.
 
@@ -167,12 +167,13 @@ Four Redpanda partitions → independent Python workers → ClickHouse, with dur
 | 2 / 4 | 4,571.08 | 1.5245 |
 | 4 / 4 | 4,222.39 | 1.5668 |
 | 8 / 8 | 6,017.02 | 6.4445 |
-| 16 / 16 | **7,018.75** | 12.4194 |
+| 16 / 16 | 7,018.75 | 12.4194 |
+| Broker gateway / 4 partitions | **15,000.00** | 60 seconds |
 
 
 Worker-path timing includes process startup, broker reading, normalization, batch proofs, insertion and offset commits. Producer timing is separate; final verification and root aggregation are excluded. Two workers outperformed four in this small run: scaling is **not linear**. These short trials are not sustained capacity results.
 
-The experiment is separate from the SQLite dashboard and its parser registry. It has one broker and one columnar node, static partition assignment, no replication or automatic failover. [Run it](docs/INTEGRATIONS.md). The 8-worker result is recorded in [scale-benchmark-8x8.json](docs/scale-benchmark-8x8.json), and the streamed 16-worker result is recorded in [scale-benchmark-16x16-streamed.json](docs/scale-benchmark-16x16-streamed.json); raw hashes, shard proofs and resume behavior passed. The four-worker aggregate root was signed in the [network witness test](docs/witness-verification.json).
+The broker gateway result is recorded in [benchmark-15k.json](docs/benchmark-15k.json): 900,000/900,000 records verified, 900 Merkle batches and three witness signatures. The separate worker experiment remains useful for partitioned ClickHouse processing; its historical 8/16-worker results are retained in [scale-benchmark-8x8.json](docs/scale-benchmark-8x8.json) and [scale-benchmark-16x16-streamed.json](docs/scale-benchmark-16x16-streamed.json).
 
 ## Requirements a-k
 
