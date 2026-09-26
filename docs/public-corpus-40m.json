@@ -1,0 +1,53 @@
+{
+  "purpose": "Inventory and full-file validation of real public log records",
+  "generated_by": "scripts/measure_coverage.py",
+  "scope": "The six existing public corpora plus three Loghub system-log corpora. Dashboard replay fixtures are excluded.",
+  "existing_public_records": 23999412,
+  "added_public_records": 16317025,
+  "total_public_records": 40316437,
+  "added_corpora": [
+    {
+      "dataset": "bgl",
+      "source": "Loghub BGL",
+      "url": "https://zenodo.org/records/8196385/files/BGL.zip?download=1",
+      "archive_sha256": "d67fd82a711aea0157a9b83175892c6ee60e384a2ddf5bc51f39118453816da8",
+      "file": "data/datasets/bgl/extracted/BGL.log",
+      "records": 4747963,
+      "category": "public system log"
+    },
+    {
+      "dataset": "hdfs_v1",
+      "source": "Loghub HDFS_v1",
+      "url": "https://zenodo.org/records/8196385/files/HDFS_v1.zip?download=1",
+      "archive_sha256": "04f919f2185821f23f045dca611a7586429bdabc601bd7b43f30005f8e289b01",
+      "file": "data/datasets/hdfsv1/extracted/HDFS.log",
+      "records": 11175629,
+      "category": "public system log"
+    },
+    {
+      "dataset": "hadoop",
+      "source": "Loghub Hadoop",
+      "url": "https://zenodo.org/records/8196385/files/Hadoop.zip?download=1",
+      "archive_sha256": "79e63c6521e90ae164754a29d13e04e0c6c5e782490a7fe1e2b124f4f5737ced",
+      "file_glob": "data/datasets/hadoop/extracted/**/*.log",
+      "physical_lines": 394310,
+      "metadata_lines": 877,
+      "records": 393433,
+      "files": 978,
+      "category": "public system log"
+    }
+  ],
+  "validation": {
+    "method": "Stream every physical log line through the built-in decode, mapping and normalization dry-run; hash raw bytes; retain discovery and failure outcomes.",
+    "report": "docs/coverage-public-40m.json",
+    "extension_physical_lines": 16317902,
+    "extension_metadata_lines": 877,
+    "extension_event_records": 16317025,
+    "extension_discovery_records": 16317024,
+    "extension_failed_records": 1,
+    "extension_normalized_records": 0,
+    "raw_archives_committed": false,
+    "synthetic_records_included": false,
+    "perimeter_claim": "The added Loghub corpora are system logs. They extend real-record scale validation but are not represented as perimeter-firewall coverage."
+  }
+}

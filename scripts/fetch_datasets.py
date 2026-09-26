@@ -2,7 +2,7 @@
 """Download complete public corpora into ignored data/, with hashes and safe extraction.
 No sampled fallback, payload execution, or silent replacement on failed downloads.
 """
-import argparse,concurrent.futures,gzip,hashlib,json,shutil,tarfile,time,urllib.request
+import argparse,concurrent.futures,gzip,hashlib,json,shutil,tarfile,time,urllib.request,zipfile
 from pathlib import Path
 CATALOG={
  'linux':('https://zenodo.org/records/8196385/files/Linux.tar.gz?download=1','tar','Loghub full Linux corpus; research/academic terms'),
@@ -11,6 +11,9 @@ CATALOG={
  'honeynet30':('https://honeynet.onofri.org/scans/scan30/honeynet-Feb1_FebXX.log.gz','gz','Honeynet Scan of the Month 30 archive mirror'),
  'honeynet34':('https://honeynet.onofri.org/scans/scan34/SotM34-anton.tar.gz','tar','Honeynet Scan of the Month 34 archive mirror'),
  'maccdc2012':('https://www.secrepo.com/maccdc2012/conn.log.gz','gz','SecRepo MACCDC 2012 connection log; see source attribution/terms'),
+ 'bgl':('https://zenodo.org/records/8196385/files/BGL.zip?download=1','zip','Loghub full BGL corpus; research/academic terms'),
+ 'hdfs_v1':('https://zenodo.org/records/8196385/files/HDFS_v1.zip?download=1','zip','Loghub full HDFS_v1 corpus; research/academic terms'),
+ 'hadoop':('https://zenodo.org/records/8196385/files/Hadoop.zip?download=1','zip','Loghub full Hadoop corpus; research/academic terms'),
 }
 def sha(path):
     with Path(path).open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
@@ -27,7 +30,7 @@ def extract(archive,dest,kind,limit=4*1024**3):
         files.append({'path':str(path.relative_to(Path.cwd())) if path.is_absolute() and path.is_relative_to(Path.cwd()) else str(path),'bytes':path.stat().st_size,'sha256':sha(path)})
     if kind=='gz':
         with gzip.open(archive,'rb') as f:copy(f,dest/'capture.log')
-    else:
+    elif kind=='tar':
         with tarfile.open(archive,'r:gz') as tf:
             for member in tf:
                 target=(dest/member.name).resolve()
@@ -35,6 +38,17 @@ def extract(archive,dest,kind,limit=4*1024**3):
                 if member.isfile():
                     if member.size+total>limit:raise ValueError('uncompressed size limit exceeded')
                     with tf.extractfile(member) as f:copy(f,target,member.size)
+    elif kind=='zip':
+        with zipfile.ZipFile(archive) as zf:
+            for member in zf.infolist():
+                target=(dest/member.filename).resolve()
+                is_dir=member.filename.endswith('/')
+                is_link=(member.external_attr >> 16) & 0o170000 == 0o120000
+                if not target.is_relative_to(dest.resolve()) or is_link:raise ValueError('unsafe archive path/link')
+                if not is_dir:
+                    if member.file_size+total>limit:raise ValueError('uncompressed size limit exceeded')
+                    with zf.open(member,'r') as f:copy(f,target,member.file_size)
+    else: raise ValueError(f'unsupported archive kind: {kind}')
     return files
 
 def fetch(name,root):

@@ -1,4 +1,4 @@
-import io,tarfile
+import io,tarfile,zipfile
 from scripts.fetch_datasets import extract
 from scripts.measure_coverage import measure
 import pytest
@@ -8,6 +8,12 @@ def test_archive_traversal_is_rejected(tmp_path):
     with tarfile.open(archive,'w:gz') as f:
         m=tarfile.TarInfo('../outside');m.size=1;f.addfile(m,io.BytesIO(b'x'))
     with pytest.raises(ValueError,match='unsafe'):extract(archive,tmp_path/'safe','tar')
+    assert not (tmp_path/'outside').exists()
+
+def test_zip_archive_traversal_is_rejected(tmp_path):
+    archive=tmp_path/'evil.zip'
+    with zipfile.ZipFile(archive,'w') as f:f.writestr('../outside','x')
+    with pytest.raises(ValueError,match='unsafe'):extract(archive,tmp_path/'safe','zip')
     assert not (tmp_path/'outside').exists()
 
 def test_coverage_accounts_for_unknown_failed_and_metadata(tmp_path):

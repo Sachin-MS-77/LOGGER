@@ -129,6 +129,10 @@ All numbers describe the specified run. Coverage is not detection accuracy, and 
 
 [Complete per-file counts](docs/coverage.json) · [Before the iptables adapter](docs/coverage-before-iptables.json) · [Dataset manifest](docs/dataset-manifest.json)
 
+#### 40-million-record public-corpus validation
+
+The full-file validation was extended with three additional public Loghub corpora: BGL (4,747,963 records), HDFS_v1 (11,175,629) and Hadoop (393,433 event records across 978 files; 394,310 physical lines including headers). Together with the six existing public perimeter/system corpora, the run covers **40,316,437 real event records**. The added corpora are genuine public system logs and are reported separately from perimeter captures; they are not synthetic dashboard fixtures. Every line was streamed through the built-in decoder/mapping/normalization dry-run, while raw bytes were hashed and unknown or failed records were retained in the report. Re-run the extension scan with `../venv/bin/python scripts/verify_public_corpus.py` after staging the archives. See [`docs/public-corpus-40m.json`](docs/public-corpus-40m.json) and [`docs/coverage-public-40m.json`](docs/coverage-public-40m.json) for exact file hashes, counts and outcomes. Raw archives remain ignored locally because of size and source terms.
+
 The iptables adapter preserves repeated inner-packet attributes without overwriting outer addresses. It does not infer allow/deny from INBOUND/OUTBOUND. Linux, Apache, OpenSSH, older Snort text and Zeek text coverage gaps remain visible rather than being hidden behind an aggregate percentage. The before/after improvement here is a coded adapter improvement, not a claim that AI automatically learned these corpora.
 
 Dataset attribution: [Loghub](https://github.com/logpai/loghub) (research/academic terms; see its citation), [Honeynet Scan 30](https://honeynet.onofri.org/scans/scan30/), [Scan 34](https://honeynet.onofri.org/scans/scan34/), [SecRepo](https://www.secrepo.com/). Raw corpora are not redistributed in GitHub.
