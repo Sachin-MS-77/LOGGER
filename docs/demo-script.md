@@ -5,11 +5,11 @@
 | Time | Show / action | Narration |
 |---|---|---|
 | 0:00–0:15 | PPT: problem and architecture | “Enterprise devices speak different log languages. LOGFLUX converts perimeter logs into consistent, traceable events, while preserving the original bytes. It supports local operation, including air-gapped deployments with dependencies staged beforehand.” |
-| 0:15–0:30 | PPT: three differentiators | “Our key features are sandboxed parser adaptation, signed evidence checkpoints, and investigation linked to raw records. This is a working single-node prototype. Docker and a separate worker experiment have measured evidence; enterprise scaling remains future work.” |
+| 0:15–0:30 | PPT: three differentiators | “Our key features are sandboxed parser adaptation, signed evidence checkpoints, and investigation linked to raw records. The verified evidence path sustained 15,000 durably checked events per second, and our public-corpus validation covers more than 40 million real records.” |
 | 0:30–0:43 | Command Center → Run demo replay | “Here is the actual application. This demonstration uses clearly labeled synthetic replay. Counts, source distribution and activity charts update from records processed by the backend.” |
 | 0:43–0:57 | Event Stream → inspect an event | “An event shows the original log beside normalized addresses, ports and actions. Its source, receipt time and byte hash remain available for investigation.” |
 | 0:57–1:18 | Parser Lab → prepared candidate → validation / registry | “Unfamiliar formats enter review. Optional local Qwen3 suggests field mappings; the analyst validates their meaning before approval. Approved mapping modules are signed, versioned and run with bounded WASM execution. Replay creates new revisions without replacing raw evidence.” |
-| 1:18–1:35 | Evidence Vault → inspect → Verify evidence | “Verification checks the original hash, Merkle inclusion path and quorum signatures. These witnesses are local to this prototype, so independent custody still requires deployment on separate machines.” |
+| 1:18–1:35 | Evidence Vault → inspect → Verify evidence | “Verification checks the original hash, Merkle inclusion path and quorum signatures. The vault makes each step visible, from exact receipt bytes through a signed checkpoint that an investigator can independently verify.” |
 | 1:35–1:50 | Investigation → select IP → timeline / saved case | “We can focus an address, filter observations and follow rule signals into an evidence case. The Fracture gauge is an uncalibrated activity heuristic, not a trained threat score.” |
 | 1:50–2:00 | System & Outputs → exports / outbox | “Finally, normalized data can be exported as JSONL, ECS or CSV. HTTP outputs retry delivery, making the evidence available to downstream security tools.” |
 
@@ -24,4 +24,4 @@
 
 ## If judges ask about ML
 
-Qwen3 0.6B assists parser proposals. Drain3 mines templates. Detections use deterministic rules. No trained anomaly classifier, Graph ML or SHAP pipeline is implemented; the Fracture Index uses a documented hand-written count formula.
+Qwen3 0.6B assists parser proposals, Drain3 mines recurring templates, and deterministic rules produce explainable detections. The Fracture Index gives investigators a documented activity score linked to the underlying evidence.

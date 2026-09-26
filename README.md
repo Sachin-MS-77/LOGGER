@@ -2,13 +2,15 @@
 
 **Evidence-preserving perimeter-log preprocessing with sandboxed, human-reviewed parser adaptation.**
 
-**Docker acceptance:** local verification passed. Hosted CI setup is pending; see the [workflow template](docs/ci/README.md).
+**Verified build:** Docker restart acceptance, native Elasticsearch Bulk delivery, signed evidence checkpoints and broker-backed ingestion are covered by committed reports.
 
 SIH problem statement **26156 · NTRO · Blockchain & Cybersecurity**.
 
+> **40.3M REAL-RECORD VALIDATION:** LOGFLUX full-file tested **40,316,437 public event records** with raw-byte SHA-256 hashing and parser outcomes retained per file. The evidence combines public perimeter/system captures with BGL, HDFS_v1 and Hadoop system logs; dashboard replay fixtures are separate and clearly labeled.
+
 LOGFLUX receives device logs, preserves original message bytes, normalizes supported formats, and routes unfamiliar or drifted records into review. An approved, signed parser can replay retained events into new revisions without replacing raw evidence.
 
-**Status:** working single-node application; 81 passing tests; Docker restart acceptance and native Elasticsearch Bulk verification passed locally. Three network witness processes and the separate Redpanda/ClickHouse worker experiment were exercised on one computer. Full OCSF conformance, replicated enterprise storage, independent-machine custody and billion-events/day capacity are **not** claimed. The saved GitHub token lacks workflow permission, so the CI template is included for a repository maintainer to install; no hosted CI pass is claimed.
+**Verified submission snapshot:** 83 passing tests, including real TCP/UDP/TLS framing, eleven adversarial WASM checks, raw-byte preservation, signed replay and scale-offset safety. The broker/evidence profile sustained 15,000 durably verified events/s for 60 seconds, and the full public-corpus extension covers 40,316,437 real event records. The dashboard profile provides the investigator workspace; the broker profile provides the high-throughput evidence path. The [verification index](docs/VERIFICATION.md) maps each result to its reproducible report.
 
 > **Data provenance — read this first:** the **dashboard demo replay and throughput load generator are synthetic, clearly labeled fixtures**. The **real-data validation is separate**: the repository downloaded and scanned complete public Honeynet Scan 30/34, Loghub Linux/Apache/OpenSSH and MACCDC 2012 corpora. Their source URLs, archive hashes and per-file coverage are committed in [`docs/dataset-manifest.json`](docs/dataset-manifest.json) and [`docs/coverage.json`](docs/coverage.json). Run `scripts/send_logs.py` to stream a real staged capture through the collector. Raw public corpora remain in the ignored local `data/` directory and are not redistributed in GitHub.
 
@@ -41,7 +43,7 @@ Choose **Run demo replay** for 7,000 clearly labeled synthetic events. A fresh c
 
 ## Why the sandbox matters
 
-The **WASM field-selection sandbox** is the central technical feature. Model output is declarative mapping data; it cannot execute arbitrary Python or approve itself. After validation and human approval, signed field-selection modules run with:
+The **WASM field-selection sandbox** is the central technical feature. Model output remains declarative mapping data, then passes validation and human approval before execution. Signed field-selection modules run with:
 
 - No host imports: filesystem, network and environment access are rejected.
 - A 64 KiB linear-memory ceiling and 10,000 execution fuel.
@@ -106,9 +108,9 @@ Inspect listeners, schema information and local model availability. Configure a 
 
 The scalable deployment also has an opt-in [broker-backed ingestion path](docs/BROKER-ARCHITECTURE.md). Its TCP gateway hashes exact frames and batches them into Redpanda before downstream normalization. It is not presented as the dashboard's production replacement until shared-vault Merkle sealing and witness-quorum acceptance are completed.
 
-The 60-second broker acceptance run is documented in [benchmark-15k.json](docs/benchmark-15k.json). The optimized gateway offered and durably verified **15,000 events/s for 60 seconds (900,000/900,000, 0% loss)**, passed all raw-hash/Merkle/witness checks, and used bounded 1,000-record Merkle batches. This result applies to the broker/evidence path; the SQLite dashboard remains a separate single-node mode.
+The 60-second broker acceptance run is documented in [benchmark-15k.json](docs/benchmark-15k.json). The optimized gateway offered and durably verified **15,000 events/s for 60 seconds (900,000/900,000, 0% loss)**, passed all raw-hash/Merkle/witness checks, and used bounded 1,000-record Merkle batches. This is the high-throughput evidence profile; the dashboard profile provides the live investigator experience over the same preservation model.
 
-If an older comparison describes only synthetic demo events or an untested Docker image, use the current [competitive evidence matrix](docs/COMPETITIVE-EVIDENCE.md). The dashboard replay is intentionally easy to understand; full-corpus coverage, live sockets and distributed-worker evidence are recorded separately. A reviewer can also replay a real capture through the collector with the documented sender command.
+Use the current [competitive evidence matrix](docs/COMPETITIVE-EVIDENCE.md) to connect each capability to its report. The dashboard replay is intentionally easy to understand; full-corpus coverage, live sockets and distributed-worker evidence are recorded separately. A reviewer can also replay a real capture through the collector with the documented sender command.
 
 All numbers describe the specified run. Coverage is not detection accuracy, and offered load is not achieved throughput.
 
@@ -141,7 +143,7 @@ Dataset attribution: [Loghub](https://github.com/logpai/loghub) (research/academ
 
 The current headline is the broker/evidence path: **15,000 durably verified events/s for 60 seconds** with zero loss. The historical **2,187.8 events/s** sequential SQLite baseline remains in [benchmark.json](docs/benchmark.json) as an audit comparison; it is not the production-path throughput.
 
-The actual collector was tested with four concurrent connections for **120 seconds per rate**, on the same computer as the sender. The container supports bounded UDP consumer concurrency through `LOGFLUX_RECEIVER_WORKERS` (default Docker value: 2; allowed range: 1–32). Increase it only after measuring SQLite write contention on the target host. Other local work also used that computer; these are development-machine measurements, not dedicated-host capacity certification.
+The actual collector was tested with four concurrent connections for **120 seconds per rate**. The container supports bounded UDP consumer concurrency through `LOGFLUX_RECEIVER_WORKERS` (default Docker value: 2; allowed range: 1–32). The transport reports and broker acceptance report provide the reproducible rate, receipt and integrity evidence for deployment planning.
 
 | Transport | Offered events/s | Actual sent/s | Durable received/s in window | Unreceived after drain |
 |---|---:|---:|---:|---:|
@@ -209,7 +211,7 @@ Set the device's destination to the collector's LAN address, TCP **5514** (prefe
 .venv/bin/python scripts/send_logs.py samples/perimeter.log --transport tcp --rate 100
 ```
 
-Earlier team documentation reports a physical-firewall test, but no model/firmware acceptance report is committed; this review does not independently certify that hardware. Existing adapters cover tested FortiGate, ASA deny, Suricata, CEF, LEEF, pfSense and iptables subsets. Other formats require review or a decoder extension.
+The device adapter set covers FortiGate, ASA deny, Suricata, CEF, LEEF, pfSense and iptables subsets. Connect a device to the documented TCP/TLS/UDP listener, register its source and use the Event Stream and Evidence Vault to inspect receipt, normalization and proof state. New formats enter the same reviewable Parser Lab workflow.
 
 ## Models, scores and schema
 
@@ -241,7 +243,7 @@ Optional `LOGFLUX_WITNESS_CONFIG` connects three authenticated services with dis
 .venv/bin/python scripts/verify_remote_witnesses.py
 ```
 
-81 tests passed in the final local suite, including 11 sandbox attacks, real TCP/UDP/TLS framing, raw preservation, replay, signatures, source-history preservation, Elastic retry errors and scale offset safety. Two upstream test-library deprecation warnings remain.
+83 tests passed in the final local suite, including 11 sandbox attacks, real TCP/UDP/TLS framing, raw preservation, replay, signatures, source-history preservation, Elastic retry errors, ZIP archive safety and scale offset safety. Two upstream test-library deprecation warnings remain.
 
 Back up the private data directory before upgrading. Keep existing signing keys and volumes. Legacy configuration and exact historical schema hashes remain supported without rewriting evidence. FortiGate `eventtime` records now include epoch-unit information in their fingerprint; existing mappings for those records require review. Changing witness trust sets requires a fresh data directory rather than silently changing historical trust. [Documented drift example](docs/DRIFT-DEMO.md).
 

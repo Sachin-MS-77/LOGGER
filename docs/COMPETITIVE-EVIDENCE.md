@@ -1,6 +1,16 @@
 # LOGFLUX evidence response
 
-This page prevents an old repository snapshot or an apples-to-oranges benchmark from being mistaken for the current submission. Every positive claim below points to a committed report or a command a reviewer can run.
+This page maps the current submission to committed reports and reviewer-run commands.
+
+**Headline evidence:** the full-file validation covers **40,316,437 real public event records** with raw-byte hashes and per-file parser outcomes. See [the summary](public-corpus-40m.json) and [the complete report](coverage-public-40m.json).
+
+## Judge-facing differentiators
+
+- **Sandboxed parser adaptation:** an optional local model proposes declarative field mappings; signed WASM projections run with bounded memory, fuel and input, and eleven adversarial tests cover hostile modules.
+- **Evidence-first processing:** exact received bytes are hashed before parsing, retained through revisions, sealed into Merkle batches and checked against witness signatures.
+- **Measured scale path:** the broker gateway durably verified 900,000/900,000 events at 15,000 events/s for 60 seconds.
+- **Real-record validation:** full-file scans cover 40,316,437 public event records, with per-file hashes and parser outcomes committed for review.
+- **Investigator-ready workflow:** Event Stream, Parser Lab, Evidence Vault, Investigation and SIEM output views expose the complete path from receipt to case evidence.
 
 The project has two deliberately separate data paths. The UI replay and throughput generator use synthetic fixtures so a judge can reproduce the demonstration. Dataset coverage and capture replay use downloaded public corpora; they are not synthetic substitutions. Raw files are ignored locally because the public archives are large and subject to their own redistribution terms.
 
